@@ -8,7 +8,7 @@ image (MSA or ST) is made only when you actually want one.
 
 ![Directory of a disk read straight from the drive](docs/img/adresar.png)
 
-*Author: Zdeněk Kotrba · © 2026 · version 1.6 · [changelog](CHANGELOG.en.md)*
+*Author: Zdeněk Kotrba · © 2026 · version 1.7 · [changelog](CHANGELOG.en.md)*
 
 > The page itself is in Czech. The English manual translates every label you need.
 
@@ -60,7 +60,7 @@ drive yet, and the user needs access to the serial port (usually the `dialout` g
    (e.g. `COM5`) and the drive, save, and click **Otestovat spojení** (Test connection).
 4. Insert a floppy and click **Načíst disketu z mechaniky** (Read disk from drive).
 
-Full illustrated manual: **[docs/ST_disketa_manual_v1.6_EN.pdf](docs/ST_disketa_manual_v1.6_EN.pdf)**
+Full illustrated manual: **[docs/ST_disketa_manual_v1.7_EN.pdf](docs/ST_disketa_manual_v1.7_EN.pdf)**
 
 Command-line options (optional, they override saved settings):
 
@@ -113,3 +113,6 @@ The program is licensed under the **GNU GPL version 2** (see [LICENSE](LICENSE))
 - The GFA BASIC lister is a port of **gfalist / SKY**, © 1992–2001 Peter Backes, with later fixes by
   Markus Hoffmann and others ([mmuman/gfalist](https://github.com/mmuman/gfalist), GPL v2). That is why this whole project is GPL v2 as well.
 - Disks are read by Keir Fraser's **Greaseweazle** ([keirf/greaseweazle](https://github.com/keirf/greaseweazle)).
+
+Atari and the Atari logo (`src/logo.png`) are trademarks of Atari Interactive, Inc. The logo is used here only to
+show what the program is for; it is not covered by the GPL and the project is not affiliated with Atari.

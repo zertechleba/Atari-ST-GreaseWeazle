@@ -5,6 +5,11 @@
 Číslo verze je v programu (`VERSION` v `st_disketa.py`), dole na stránce a v názvu návodu.
 První číslo se mění při velké změně, druhé při každé nové funkci nebo opravě.
 
+## 1.7 – 16. 11. 2026
+
+- Logo Atari vpravo nahoře na stránce a jako ikona v záložce prohlížeče.
+- Název programu „ST disketa“ je v nadpisu stránky i v titulku záložky.
+
 ## 1.6 – 16. 11. 2026
 
 - Obrázky uložené jako surový obsah černobílé obrazovky 640×400 (soubor má přesně 32 000 bajtů, například

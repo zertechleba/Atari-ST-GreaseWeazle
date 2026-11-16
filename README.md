@@ -8,7 +8,7 @@ vytvoří teprve tehdy, když ho opravdu chcete.
 
 ![Adresář diskety načtený přímo z mechaniky](docs/img/adresar.png)
 
-*Autor: Zdeněk Kotrba · © 2026 · verze 1.6 · [seznam změn](CHANGELOG.md)*
+*Autor: Zdeněk Kotrba · © 2026 · verze 1.7 · [seznam změn](CHANGELOG.md)*
 
 ---
 
@@ -58,7 +58,7 @@ vyzkoušen nebyl a uživatel musí mít přístup k sériovému portu (obvykle s
    a mechaniku, uložte a klikněte na **Otestovat spojení**.
 4. Vložte disketu a klikněte na **Načíst disketu z mechaniky**.
 
-Podrobný návod s obrázky: **[docs/ST_disketa_navod_v1.6.pdf](docs/ST_disketa_navod_v1.6.pdf)**
+Podrobný návod s obrázky: **[docs/ST_disketa_navod_v1.7.pdf](docs/ST_disketa_navod_v1.7.pdf)**
 
 Volby na příkazové řádce (nepovinné, mají přednost před uloženým nastavením):
 
@@ -111,3 +111,6 @@ Program je pod licencí **GNU GPL verze 2** (viz [LICENSE](LICENSE)), bez jakék
 - Výpis GFA BASICu je převod programu **gfalist / SKY**, © 1992–2001 Peter Backes, s pozdějšími opravami
   Markuse Hoffmanna a dalších ([mmuman/gfalist](https://github.com/mmuman/gfalist), GPL v2). Proto je pod GPL v2 i celý tento projekt.
 - Čtení disket dělá **Greaseweazle** Keira Frasera ([keirf/greaseweazle](https://github.com/keirf/greaseweazle)).
+
+Atari a logo Atari (`src/logo.png`) jsou ochranné známky společnosti Atari Interactive, Inc. Logo je tu jen pro
+označení, k čemu program slouží, nevztahuje se na něj licence GPL a projekt není se společností Atari nijak spojen.

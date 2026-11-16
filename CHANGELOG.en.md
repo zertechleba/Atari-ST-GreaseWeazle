@@ -5,6 +5,11 @@
 The version number is in the program (`VERSION` in `st_disketa.py`), at the bottom of the page and in the manual's
 file name. The first number changes with a major change, the second with every new feature or fix.
 
+## 1.7 – 16 Nov 2026
+
+- Atari logo in the top right corner of the page and as the browser tab icon.
+- The program name "ST disketa" appears in the page heading and in the tab title.
+
 ## 1.6 – 16 Nov 2026
 
 - Pictures saved as a raw 640×400 monochrome screen (the file is exactly 32,000 bytes, for example `.PIC`)

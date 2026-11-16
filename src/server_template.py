@@ -39,7 +39,7 @@ import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "1.6"
+VERSION = "1.7"
 
 # format -> (pocet stran, sektoru na stopu); vsechny maji 80 cylindru
 FORMATS = {

@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prohlížeč disket Atari ST</title>
+<title>ST disketa – prohlížeč disket Atari ST</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,@@LOGO@@">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -47,7 +48,10 @@ body {
   padding: 20px 16px 32px;
 }
 .wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+.top { display: flex; flex-direction: column; gap: 12px; }
+.brand { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; }
+.logo { flex: none; width: 52px; height: 52px; border-radius: 9px; }
+.h1sub { font-weight: 400; color: var(--muted); font-size: 16px; margin-left: 6px; white-space: nowrap; }
 h1 { font-size: 22px; font-weight: 600; margin: 0; text-wrap: balance; }
 .sub { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
 .open { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -152,9 +156,12 @@ body.drag .wrap { outline: 3px dashed var(--accent); outline-offset: 8px; border
 <body>
 <div class="wrap">
   <header class="top">
-    <div>
-      <h1>Prohlížeč disket Atari ST</h1>
-      <p class="sub">Otevře obrazy MSA a ST a ukáže soubory na nich. Nic se nikam neodesílá, vše běží ve vašem prohlížeči.</p>
+    <div class="brand">
+      <div>
+        <h1>ST disketa <span class="h1sub">prohlížeč disket Atari ST</span></h1>
+        <p class="sub">Otevře obrazy MSA a ST a ukáže soubory na nich. Nic se nikam neodesílá, vše běží ve vašem prohlížeči.</p>
+      </div>
+      <img class="logo" src="data:image/png;base64,@@LOGO@@" alt="Logo Atari" width="52" height="52">
     </div>
     <div class="open">
       <span id="live-box" hidden>
@@ -217,7 +224,7 @@ body.drag .wrap { outline: 3px dashed var(--accent); outline-offset: 8px; border
     <section class="pane" id="view-pane" aria-label="Obsah souboru"></section>
   </main>
 
-  <p id="about" class="hint">Prohlížeč disket Atari ST, verze @@VERSION@@ · licence GNU GPL v2 · výpis GFA BASICu podle programu gfalist (Peter Backes a další)</p>
+  <p id="about" class="hint">Prohlížeč disket Atari ST, verze @@VERSION@@ · licence GNU GPL v2 · výpis GFA BASICu podle programu gfalist (Peter Backes a další) · Atari a logo Atari jsou ochranné známky společnosti Atari Interactive, Inc.; program s ní není nijak spojen</p>
 
   <details class="how">
     <summary>Jak disketu načíst Greaseweazlem</summary>
