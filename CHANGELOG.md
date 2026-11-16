@@ -5,6 +5,12 @@
 Číslo verze je v programu (`VERSION` v `st_disketa.py`), dole na stránce a v názvu návodu.
 První číslo se mění při velké změně, druhé při každé nové funkci nebo opravě.
 
+## 1.6 – 16. 11. 2026
+
+- Obrázky uložené jako surový obsah černobílé obrazovky 640×400 (soubor má přesně 32 000 bajtů, například
+  `.PIC`) se zobrazí jako obrázek, ať mají jakoukoli příponu.
+- Obrázky Degas a NEOchrome se poznají i podle velikosti souboru, když nemají obvyklou příponu.
+
 ## 1.5 – 16. 11. 2026
 
 První zveřejněná verze.

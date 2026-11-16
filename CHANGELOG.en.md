@@ -5,6 +5,12 @@
 The version number is in the program (`VERSION` in `st_disketa.py`), at the bottom of the page and in the manual's
 file name. The first number changes with a major change, the second with every new feature or fix.
 
+## 1.6 – 16 Nov 2026
+
+- Pictures saved as a raw 640×400 monochrome screen (the file is exactly 32,000 bytes, for example `.PIC`)
+  are shown as a picture whatever their extension.
+- Degas and NEOchrome pictures are also recognised by file size when they lack the usual extension.
+
 ## 1.5 – 16 Nov 2026
 
 First public release.

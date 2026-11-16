@@ -130,7 +130,7 @@
     <tr><th>View</th><th>When it is offered</th></tr>
     <tr><td><b>Text</b></td><td>always; default for text files</td></tr>
     <tr><td><b>Hex</b></td><td>always; default for programs and other binary files</td></tr>
-    <tr><td><b>Obrázek</b> (picture)</td><td>Degas (PI1–PI3, compressed PC1–PC3), NEOchrome (NEO), Doodle (DOO)</td></tr>
+    <tr><td><b>Obrázek</b> (picture)</td><td>Degas (PI1–PI3, compressed PC1–PC3), NEOchrome (NEO), Doodle (DOO), and any file of exactly 32,000 bytes, i.e. a raw 640 × 400 monochrome screen (for example PIC)</td></tr>
     <tr><td><b>Výpis GFA</b> (GFA listing)</td><td>GFA BASIC 3.x programs (chapter 6)</td></tr>
   </table>
   <figure>
@@ -296,6 +296,7 @@
   <p>The version number is shown at the bottom of the page, in <code>st_disketa.py</code> and in the name of this manual.</p>
   <table>
     <tr><th style="width:13%">Version</th><th>What changed</th></tr>
+    <tr><td><b>1.6</b></td><td>Raw 640 × 400 monochrome screens (for example <code>.PIC</code>) are shown as pictures. Degas and NEOchrome pictures are also recognised by size.</td></tr>
     <tr><td><b>1.5</b></td><td>First public release. Fix: programs from GFA BASIC 3.0 were shown only as unreadable text; they are now listed.</td></tr>
     <tr><td><b>1.4</b></td><td>Version number on the page, stand-alone <code>st_prohlizec.html</code>, sources in <code>src/</code>, PDF manual.</td></tr>
     <tr><td><b>1.3</b></td><td>Fix: with an unreadable disk the previous disk's contents stayed on screen. New "unreadable disk" tab, status bar at the top, a second, more thorough read attempt. Coloured GFA listing with line numbers and a procedure jump list.</td></tr>

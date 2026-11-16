@@ -514,8 +514,14 @@ function unpackBits(src, off, want) {
 }
 const RES_NAME = ['nízké rozlišení 320×200, 16 barev', 'střední rozlišení 640×200, 4 barvy', 'vysoké rozlišení 640×400, černobílé'];
 function decodeImage(name, b) {
-  const ext = (name.split('.').pop() || '').toUpperCase();
+  let ext = (name.split('.').pop() || '').toUpperCase();
   let img = null, kind = '';
+  /* Files without a telling extension are recognised by their exact size. */
+  if (!/^(P[IC][123]|NEO|DOO)$/.test(ext)) {
+    if ((b.length === 32034 || b.length === 32066) && u16be(b, 0) <= 2) ext = 'PI' + (u16be(b, 0) + 1);
+    else if (b.length === 32128 && u16be(b, 0) === 0 && u16be(b, 2) <= 2) ext = 'NEO';
+    else if (b.length === 32000) ext = 'RAW';
+  }
   if (/^P[IC][123]$/.test(ext) && b.length >= 34) {
     const head = u16be(b, 0), res = head & 3, packed = !!(head & 0x8000);
     if (res > 2) return null;
@@ -535,9 +541,9 @@ function decodeImage(name, b) {
     const pal = []; for (let i = 0; i < 16; i++) pal.push(u16be(b, 4 + i * 2));
     img = planarToRGBA(b, 128, res, pal);
     if (img) kind = 'NEOchrome, ' + RES_NAME[res];
-  } else if (ext === 'DOO' && b.length === 32000) {
+  } else if ((ext === 'DOO' || ext === 'RAW') && b.length === 32000) {
     img = planarToRGBA(b, 0, 2, [0x777]);
-    kind = 'Doodle, ' + RES_NAME[2];
+    kind = (ext === 'DOO' ? 'Doodle, ' : 'surový obsah obrazovky, ') + RES_NAME[2];
   }
   if (!img) return null;
   img.kind = kind; return img;

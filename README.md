@@ -8,7 +8,7 @@ vytvoří teprve tehdy, když ho opravdu chcete.
 
 ![Adresář diskety načtený přímo z mechaniky](docs/img/adresar.png)
 
-*Autor: Zdeněk Kotrba · © 2026 · verze 1.5 · [seznam změn](CHANGELOG.md)*
+*Autor: Zdeněk Kotrba · © 2026 · verze 1.6 · [seznam změn](CHANGELOG.md)*
 
 ---
 
@@ -27,7 +27,7 @@ první stopě. Program proto čte jen to, co je právě potřeba:
 
 - **Čtení přímo z mechaniky** přes Greaseweazle, formát diskety pozná sám (9, 10 nebo 11 sektorů, jedna nebo dvě strany).
 - **Prohlížení souborů bez emulátoru**: text (kódování Atari ST, Kamenických, Windows-1250, ISO 8859-2, UTF-8),
-  hex výpis, obrázky Degas (PI1–PI3, PC1–PC3), NEOchrome a Doodle.
+  hex výpis, obrázky Degas (PI1–PI3, PC1–PC3), NEOchrome, Doodle a surové obrazovky 640×400 (např. `.PIC`).
 - **Výpis programů GFA BASIC 3.x** (`.GFA`) s barevným zvýrazněním, čísly řádků a skokem na procedury; uložení jako `.LST`.
 - **Ukládání**: jeden soubor, všechny soubory jako ZIP, obraz diskety `.MSA` nebo `.ST`, obrázek jako PNG.
 - **Hotové obrazy** `.MSA` a `.ST` stačí přetáhnout na stránku, klidně víc najednou.
@@ -58,7 +58,7 @@ vyzkoušen nebyl a uživatel musí mít přístup k sériovému portu (obvykle s
    a mechaniku, uložte a klikněte na **Otestovat spojení**.
 4. Vložte disketu a klikněte na **Načíst disketu z mechaniky**.
 
-Podrobný návod s obrázky: **[docs/ST_disketa_navod_v1.5.pdf](docs/ST_disketa_navod_v1.5.pdf)**
+Podrobný návod s obrázky: **[docs/ST_disketa_navod_v1.6.pdf](docs/ST_disketa_navod_v1.6.pdf)**
 
 Volby na příkazové řádce (nepovinné, mají přednost před uloženým nastavením):
 

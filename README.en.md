@@ -8,7 +8,7 @@ image (MSA or ST) is made only when you actually want one.
 
 ![Directory of a disk read straight from the drive](docs/img/adresar.png)
 
-*Author: Zdeněk Kotrba · © 2026 · version 1.5 · [changelog](CHANGELOG.en.md)*
+*Author: Zdeněk Kotrba · © 2026 · version 1.6 · [changelog](CHANGELOG.en.md)*
 
 > The page itself is in Czech. The English manual translates every label you need.
 
@@ -29,7 +29,7 @@ on the first track. So the program reads only what is needed at the moment:
 
 - **Reads straight from the drive** through Greaseweazle and detects the format itself (9, 10 or 11 sectors, one or two sides).
 - **Views files without an emulator**: text (Atari ST, Kamenický, Windows-1250, ISO 8859-2, UTF-8 encodings),
-  hex dump, Degas (PI1–PI3, PC1–PC3), NEOchrome and Doodle pictures.
+  hex dump, Degas (PI1–PI3, PC1–PC3), NEOchrome and Doodle pictures, raw 640×400 screens (e.g. `.PIC`).
 - **Lists GFA BASIC 3.x programs** (`.GFA`) with syntax colouring, line numbers and a jump list of procedures; saves them as `.LST`.
 - **Saves** a single file, all files as a ZIP, a `.MSA` or `.ST` disk image, a picture as PNG.
 - **Existing images** (`.MSA`, `.ST`) can be dropped onto the page, several at once.
@@ -60,7 +60,7 @@ drive yet, and the user needs access to the serial port (usually the `dialout` g
    (e.g. `COM5`) and the drive, save, and click **Otestovat spojení** (Test connection).
 4. Insert a floppy and click **Načíst disketu z mechaniky** (Read disk from drive).
 
-Full illustrated manual: **[docs/ST_disketa_manual_v1.5_EN.pdf](docs/ST_disketa_manual_v1.5_EN.pdf)**
+Full illustrated manual: **[docs/ST_disketa_manual_v1.6_EN.pdf](docs/ST_disketa_manual_v1.6_EN.pdf)**
 
 Command-line options (optional, they override saved settings):
 
