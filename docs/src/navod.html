@@ -165,13 +165,13 @@
   </ul>
   <table>
     <tr><th>Soubor</th><th>Co uvidíte</th></tr>
-    <tr><td>GFA BASIC 3.5 a novější</td><td>úplný výpis</td></tr>
-    <tr><td>GFA BASIC 2.x a 3.0</td><td>hex výpis a poznámka, že tuto verzi program neumí</td></tr>
+    <tr><td>GFA BASIC 3.0, 3.5 a novější</td><td>úplný výpis</td></tr>
+    <tr><td>GFA BASIC 1.x a 2.x</td><td>hex výpis a poznámka, že tuto verzi program neumí</td></tr>
     <tr><td>program uložený s ochranou (PSAVE)</td><td>výpis s náhradními jmény proměnných, např. <code>v2_1A</code>; skutečná jména v souboru nejsou</td></tr>
     <tr><td>řádek s daty INLINE</td><td>příkaz INLINE a pod ním poznámka s délkou dat</td></tr>
   </table>
   <div class="note">Výpis byl porovnán se sedmi programy, ke kterým existuje originální výpis z GFA BASICu
-  (přes 5 700 řádků), a vyšel shodně. Desetinné konstanty se vypisují na 13 platných číslic.</div>
+  (přes 5 700 řádků), a vyšel shodně; všechny jsou ve formátu verze 3.5. Starší formát z GFA BASICu 3.0 byl vyzkoušen na jednom programu bez originálu k porovnání. Desetinné konstanty se vypisují na 13 platných číslic.</div>
 </section>
 
 <section>
@@ -269,7 +269,7 @@
     použijte přímo <code>gw read</code> s výstupem do formátu SCP nebo HFE.</li>
     <li>Diskety s vysokou hustotou (1,44 MB) program nenabízí.</li>
     <li>Na disketu se nezapisuje, program jen čte.</li>
-    <li>Výpis GFA BASICu umí jen formát verze 3.5 a novější.</li>
+    <li>Výpis GFA BASICu neumí soubory z GFA BASICu 1.x a 2.x.</li>
     <li>Stránka je jen česky.</li>
     <li>Na Linuxu program se skutečnou mechanikou zatím vyzkoušen nebyl.</li>
   </ul>
@@ -296,7 +296,8 @@
   <p>Číslo verze je vidět dole na stránce, v souboru <code>st_disketa.py</code> a v názvu tohoto návodu.</p>
   <table>
     <tr><th style="width:13%">Verze</th><th>Co se změnilo</th></tr>
-    <tr><td><b>1.4</b></td><td>První zveřejněná verze. Číslo verze na stránce, samostatný <code>st_prohlizec.html</code>, zdroje ve složce <code>src/</code>, návod v PDF.</td></tr>
+    <tr><td><b>1.5</b></td><td>První zveřejněná verze. Oprava: programy z GFA BASICu 3.0 se zobrazovaly jen jako nečitelný text, teď se vypíší.</td></tr>
+    <tr><td><b>1.4</b></td><td>Číslo verze na stránce, samostatný <code>st_prohlizec.html</code>, zdroje ve složce <code>src/</code>, návod v PDF.</td></tr>
     <tr><td><b>1.3</b></td><td>Oprava: při nečitelné disketě zůstával zobrazený obsah té předchozí. Nová záložka „Nečitelná disketa“, hlášení nahoře, druhý důkladnější pokus o čtení. Barevný výpis GFA s čísly řádků a skokem na procedury.</td></tr>
     <tr><td><b>1.2</b></td><td>Výpis programů GFA BASIC 3.x a uložení jako <code>.LST</code>. Licence změněna na GNU GPL v2.</td></tr>
     <tr><td><b>1.1</b></td><td>Nastavení cesty ke <code>gw</code>, portu a mechaniky přímo na stránce, test spojení, seznam portů.</td></tr>

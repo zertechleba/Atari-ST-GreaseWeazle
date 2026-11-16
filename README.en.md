@@ -8,7 +8,7 @@ image (MSA or ST) is made only when you actually want one.
 
 ![Directory of a disk read straight from the drive](docs/img/adresar.png)
 
-*Author: Zdeněk Kotrba · © 2026 · version 1.4 · [changelog](CHANGELOG.en.md)*
+*Author: Zdeněk Kotrba · © 2026 · version 1.5 · [changelog](CHANGELOG.en.md)*
 
 > The page itself is in Czech. The English manual translates every label you need.
 
@@ -60,7 +60,7 @@ drive yet, and the user needs access to the serial port (usually the `dialout` g
    (e.g. `COM5`) and the drive, save, and click **Otestovat spojení** (Test connection).
 4. Insert a floppy and click **Načíst disketu z mechaniky** (Read disk from drive).
 
-Full illustrated manual: **[docs/ST_disketa_manual_v1.4_EN.pdf](docs/ST_disketa_manual_v1.4_EN.pdf)**
+Full illustrated manual: **[docs/ST_disketa_manual_v1.5_EN.pdf](docs/ST_disketa_manual_v1.5_EN.pdf)**
 
 Command-line options (optional, they override saved settings):
 
@@ -78,7 +78,7 @@ python st_disketa.py --gw "C:\Greaseweazle\gw.exe" --device COM5 --drive A --por
 - At most 80 tracks per side are read; disks formatted to 81–82 tracks are not read completely.
 - Copy-protected disks and custom formats have no directory and can only be browsed by sector.
   To archive those, use `gw read` directly with SCP or HFE output.
-- The GFA BASIC lister handles file format version 3.5 and later only. Older files (GFA 2.x, 3.0) are shown as hex.
+- The GFA BASIC lister handles GFA BASIC 3.x files (3.0 as well as 3.5 and later). Files from GFA BASIC 1.x and 2.x are shown as hex.
 - Programs saved with protection (PSAVE) contain no variable names; placeholder names are shown.
 - The page is in Czech.
 

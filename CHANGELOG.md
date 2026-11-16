@@ -5,9 +5,15 @@
 Číslo verze je v programu (`VERSION` v `st_disketa.py`), dole na stránce a v názvu návodu.
 První číslo se mění při velké změně, druhé při každé nové funkci nebo opravě.
 
-## 1.4 – 16. 11. 2026
+## 1.5 – 16. 11. 2026
 
 První zveřejněná verze.
+
+- **Oprava:** programy uložené v GFA BASICu 3.0 (starší formát souboru, verze 3) se zobrazovaly jen jako
+  nečitelný text. Teď se vypíší stejně jako soubory z verze 3.5.
+  Ověřeno na jednom programu z roku 1988; originální výpis k porovnání k němu není.
+
+## 1.4 – 16. 11. 2026
 
 - Číslo verze a licence jsou vidět dole na stránce.
 - Přidán samostatný soubor `st_prohlizec.html` pro prohlížení obrazů bez Pythonu.

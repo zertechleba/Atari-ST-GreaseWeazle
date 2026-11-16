@@ -39,7 +39,7 @@ import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION = "1.4"
+VERSION = "1.5"
 
 # format -> (pocet stran, sektoru na stopu); vsechny maji 80 cylindru
 FORMATS = {
@@ -579,7 +579,7 @@ body.drag .wrap { outline: 3px dashed var(--accent); outline-offset: 8px; border
     <section class="pane" id="view-pane" aria-label="Obsah souboru"></section>
   </main>
 
-  <p id="about" class="hint">Prohlížeč disket Atari ST, verze 1.4 · licence GNU GPL v2 · výpis GFA BASICu podle programu gfalist (Peter Backes a další)</p>
+  <p id="about" class="hint">Prohlížeč disket Atari ST, verze 1.5 · licence GNU GPL v2 · výpis GFA BASICu podle programu gfalist (Peter Backes a další)</p>
 
   <details class="how">
     <summary>Jak disketu načíst Greaseweazlem</summary>
@@ -944,7 +944,7 @@ const GFA_SKIP1 = new Set([46, 64, 68, 136, 137, 142, 144, 145, 146, 147, 148, 1
 function gfaDetect(b) {
   if (b.length < 20 || (b[0] !== 0 && b[0] !== 0xFF)) return null;
   const mag = String.fromCharCode(...b.subarray(2, 12));
-  if (mag === 'GFA-BASIC3') return { vers: b[1], prot: b[0] === 0xFF, ok: b[1] === 4 && b.length >= 166 };
+  if (mag === 'GFA-BASIC3') return { vers: b[1], prot: b[0] === 0xFF, ok: (b[1] === 3 || b[1] === 4) && b.length >= 166 };
   if (mag.startsWith('GfABASIC')) return { vers: b[1], prot: b[0] === 0xFF, ok: false };
   return null;
 }
@@ -1450,7 +1450,7 @@ if (typeof document !== 'undefined') (function () {
       const pi = prgInfo(bytes); if (pi) bits.push(pi);
       if (c.img) bits.push(c.img.kind);
       if (c.listing) bits.push('GFA BASIC 3.x, ' + c.listing.lines + ' řádků' + (c.listing.prot ? ', chráněný proti výpisu: jména proměnných v souboru nejsou' : ''));
-      else if (c.gfa) bits.push('GFA BASIC, formát verze ' + c.gfa.vers + ': výpis umím jen pro verze 3.5 a novější');
+      else if (c.gfa) bits.push('GFA BASIC, formát verze ' + c.gfa.vers + ': výpis umím jen pro GFA BASIC 3.x');
       if (e.deleted) bits.push('smazaný soubor, obsah nemusí odpovídat');
       else if (!c.complete) bits.push('řetězec clusterů je kratší než soubor, obsah je neúplný');
       pane.append(el('p', { class: 'file-meta' }, bits.join(' · ')));

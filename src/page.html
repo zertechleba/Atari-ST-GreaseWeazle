@@ -901,7 +901,7 @@ if (typeof document !== 'undefined') (function () {
       const pi = prgInfo(bytes); if (pi) bits.push(pi);
       if (c.img) bits.push(c.img.kind);
       if (c.listing) bits.push('GFA BASIC 3.x, ' + c.listing.lines + ' řádků' + (c.listing.prot ? ', chráněný proti výpisu: jména proměnných v souboru nejsou' : ''));
-      else if (c.gfa) bits.push('GFA BASIC, formát verze ' + c.gfa.vers + ': výpis umím jen pro verze 3.5 a novější');
+      else if (c.gfa) bits.push('GFA BASIC, formát verze ' + c.gfa.vers + ': výpis umím jen pro GFA BASIC 3.x');
       if (e.deleted) bits.push('smazaný soubor, obsah nemusí odpovídat');
       else if (!c.complete) bits.push('řetězec clusterů je kratší než soubor, obsah je neúplný');
       pane.append(el('p', { class: 'file-meta' }, bits.join(' · ')));

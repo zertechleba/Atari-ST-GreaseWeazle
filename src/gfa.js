@@ -30,7 +30,7 @@ const GFA_SKIP1 = new Set([46, 64, 68, 136, 137, 142, 144, 145, 146, 147, 148, 1
 function gfaDetect(b) {
   if (b.length < 20 || (b[0] !== 0 && b[0] !== 0xFF)) return null;
   const mag = String.fromCharCode(...b.subarray(2, 12));
-  if (mag === 'GFA-BASIC3') return { vers: b[1], prot: b[0] === 0xFF, ok: b[1] === 4 && b.length >= 166 };
+  if (mag === 'GFA-BASIC3') return { vers: b[1], prot: b[0] === 0xFF, ok: (b[1] === 3 || b[1] === 4) && b.length >= 166 };
   if (mag.startsWith('GfABASIC')) return { vers: b[1], prot: b[0] === 0xFF, ok: false };
   return null;
 }

@@ -5,9 +5,15 @@
 The version number is in the program (`VERSION` in `st_disketa.py`), at the bottom of the page and in the manual's
 file name. The first number changes with a major change, the second with every new feature or fix.
 
-## 1.4 – 16 Nov 2026
+## 1.5 – 16 Nov 2026
 
 First public release.
+
+- **Fix:** programs saved by GFA BASIC 3.0 (older file format, version 3) were shown only as unreadable text.
+  They are now listed like files from version 3.5.
+  Checked on one program from 1988; there is no original listing to compare it with.
+
+## 1.4 – 16 Nov 2026
 
 - Version number and licence are shown at the bottom of the page.
 - Added the stand-alone `st_prohlizec.html` for viewing images without Python.

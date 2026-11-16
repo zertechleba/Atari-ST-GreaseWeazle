@@ -8,7 +8,7 @@ vytvoří teprve tehdy, když ho opravdu chcete.
 
 ![Adresář diskety načtený přímo z mechaniky](docs/img/adresar.png)
 
-*Autor: Zdeněk Kotrba · © 2026 · verze 1.4 · [seznam změn](CHANGELOG.md)*
+*Autor: Zdeněk Kotrba · © 2026 · verze 1.5 · [seznam změn](CHANGELOG.md)*
 
 ---
 
@@ -58,7 +58,7 @@ vyzkoušen nebyl a uživatel musí mít přístup k sériovému portu (obvykle s
    a mechaniku, uložte a klikněte na **Otestovat spojení**.
 4. Vložte disketu a klikněte na **Načíst disketu z mechaniky**.
 
-Podrobný návod s obrázky: **[docs/ST_disketa_navod_v1.4.pdf](docs/ST_disketa_navod_v1.4.pdf)**
+Podrobný návod s obrázky: **[docs/ST_disketa_navod_v1.5.pdf](docs/ST_disketa_navod_v1.5.pdf)**
 
 Volby na příkazové řádce (nepovinné, mají přednost před uloženým nastavením):
 
@@ -76,7 +76,7 @@ v prohlížeči a přetáhnout na něj obrazy `.MSA` nebo `.ST`.
 - Čte se nejvýš 80 stop na stranu; diskety formátované na 81–82 stop se nenačtou celé.
 - Diskety s ochranou proti kopírování nebo vlastním formátem nemají adresář a jdou projít jen po sektorech.
   Na jejich archivaci použijte přímo `gw read` do formátu SCP nebo HFE.
-- Výpis GFA BASICu umí jen formát verze 3.5 a novější. Starší soubory (GFA 2.x, 3.0) se zobrazí jako hex.
+- Výpis GFA BASICu umí soubory GFA BASIC 3.x (3.0 i 3.5 a novější). Soubory z GFA BASICu 1.x a 2.x se zobrazí jako hex.
 - Programy uložené s ochranou (PSAVE) nemají v souboru jména proměnných, vypíší se s náhradními jmény.
 - Stránka je česky.
 
