@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>ST disketa – návod</title>
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="cover">
+  <div class="band">
+    <h1>ST disketa</h1>
+    <p class="sub">Prohlížeč disket Atari ST přes Greaseweazle<br>Návod k použití</p>
+  </div>
+  <figure>
+    <img src="../img/obrazek.png" alt="">
+    <figcaption>Disketa v mechanice: vlevo adresář, vpravo obrázek přečtený přímo z diskety</figcaption>
+  </figure>
+  <div class="meta"><span>Verze <span class="ver"></span> · listopad 2026</span><span>Zdeněk Kotrba · licence GNU GPL v2</span></div>
+</div>
+
+<section>
+  <h2>Obsah</h2>
+  <ol class="toc">
+    <li><span class="n">1</span>Co program dělá</li>
+    <li><span class="n">2</span>Co je potřeba</li>
+    <li><span class="n">3</span>První spuštění</li>
+    <li><span class="n">4</span>Načtení diskety</li>
+    <li><span class="n">5</span>Prohlížení souborů</li>
+    <li><span class="n">6</span>Programy v GFA BASICu</li>
+    <li><span class="n">7</span>Ukládání do počítače</li>
+    <li><span class="n">8</span>Nastavení</li>
+    <li><span class="n">9</span>Hotové obrazy disket</li>
+    <li><span class="n">10</span>Když něco nejde</li>
+    <li><span class="n">11</span>Omezení</li>
+    <li><span class="n">12</span>Jak to funguje</li>
+    <li><span class="n">13</span>Historie verzí</li>
+    <li><span class="n">14</span>Licence a poděkování</li>
+  </ol>
+
+  <section class="flow">
+  <h2><span class="n">1</span>Co program dělá</h2>
+  <p>Kdo má krabici disket z Atari ST a Greaseweazle, obvykle každou disketu nejdřív celou převede do souboru
+  MSA nebo ST a teprve potom se v emulátoru dívá, co na ní je. To trvá, a většinu disket přitom člověk celou nechce.</p>
+  <p>ST disketa to dělá obráceně. Chová se jako samotné Atari: vložíte disketu a uvidíte její obsah.</p>
+  <table>
+    <tr><th>Co chcete</th><th>Co se z diskety čte</th><th>Jak dlouho to trvá</th></tr>
+    <tr><td>vidět obsah diskety</td><td>stopa 0 a stopy s podadresáři</td><td>několik sekund</td></tr>
+    <tr><td>prohlédnout nebo stáhnout jeden soubor</td><td>jen stopy, na kterých soubor leží</td><td>podle velikosti souboru</td></tr>
+    <tr><td>obraz celé diskety nebo všechny soubory</td><td>zbytek diskety</td><td>jako běžné čtení celé diskety</td></tr>
+  </table>
+  <p>Stopy, které už byly jednou načteny, se nečtou znovu. Když si tedy prohlédnete pár souborů a pak se
+  rozhodnete uložit celý obraz, dočte se jen to, co chybí.</p>
+  <p>Soubory se dají rovnou prohlížet: texty, obrázky, hex výpis a programy v GFA BASICu. Emulátor není potřeba.</p>
+  </section>
+</section>
+
+<section>
+  <h2><span class="n">2</span>Co je potřeba</h2>
+  <table>
+    <tr><th>Věc</th><th>Poznámka</th></tr>
+    <tr><td><b>Greaseweazle</b> s disketovou mechanikou 3,5"</td><td>libovolná verze, kterou umí ovládat program <code>gw</code></td></tr>
+    <tr><td><b>Greaseweazle Tools</b></td><td>program <code>gw.exe</code> (Windows) nebo <code>gw</code> (Linux); ke stažení na github.com/keirf/greaseweazle</td></tr>
+    <tr><td><b>Python 3.8 nebo novější</b></td><td>z python.org; žádné další balíčky se neinstalují</td></tr>
+    <tr><td>webový prohlížeč</td><td>Chrome, Edge nebo Firefox</td></tr>
+    <tr><td>soubor <code>st_disketa.py</code></td><td>celý program je v tomto jediném souboru</td></tr>
+  </table>
+  <div class="note">Nejdřív si ověřte, že Greaseweazle funguje sám o sobě: příkaz <code>gw info</code> má vypsat model a verzi firmwaru.</div>
+
+  <section class="flow">
+  <h2><span class="n">3</span>První spuštění</h2>
+  <ol class="steps">
+    <li>Uložte <code>st_disketa.py</code> kamkoli na disk, třeba do složky s Greaseweazle Tools.</li>
+    <li>Otevřete v té složce příkazový řádek a spusťte:
+      <pre>python st_disketa.py</pre>
+      Na Windows funguje i <code>py st_disketa.py</code>.</li>
+    <li>V prohlížeči se otevře stránka <code>http://127.0.0.1:8737/</code>. Okno příkazového řádku nechte otevřené, program v něm běží. Ukončíte ho klávesami <kbd>Ctrl</kbd>+<kbd>C</kbd>.</li>
+    <li>Když program <code>gw</code> nenajde, otevře se na stránce rovnou <b>Nastavení</b>. Zadejte cestu ke <code>gw.exe</code> a uložte (kapitola 8).</li>
+    <li>Klikněte na <b>Otestovat spojení</b>. Má se vypsat model Greaseweazle a verze firmwaru.</li>
+  </ol>
+  <p>Program hledá <code>gw</code> postupně v uloženém nastavení, ve složce vedle sebe a v systémové cestě (PATH).
+  Stránka při prvním otevření ukazuje malou ukázkovou disketu, na které si můžete ovládání vyzkoušet bez mechaniky.</p>
+  </section>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Načtení diskety</h2>
+  <ol class="steps">
+    <li>Vložte disketu do mechaniky.</li>
+    <li>Klikněte na <b>Načíst disketu z mechaniky</b>.</li>
+    <li>Nahoře běží hlášení „Čtu boot sektor …“ a „Čtu adresář …“. Po chvíli se vlevo objeví obsah diskety.</li>
+  </ol>
+  <figure>
+    <img src="../img/adresar.png" alt="">
+    <figcaption>Disketa po načtení adresáře. Z diskety jsou zatím přečtené jen 2 stopy ze 160.</figcaption>
+  </figure>
+  <h3>Co je na stránce</h3>
+  <table>
+    <tr><th>Část</th><th>Význam</th></tr>
+    <tr><td>pruh s hlášením</td><td>co se právě děje; chyby jsou oranžově</td></tr>
+    <tr><td>záložky disket</td><td>každá načtená disketa má svou záložku se značkou „v mechanice“ nebo „vyjmuta“</td></tr>
+    <tr><td>údaje o disketě</td><td>formát, geometrie, jmenovka, počet souborů, volné místo, kolik stop už je načteno</td></tr>
+    <tr><td>Obsah diskety</td><td>adresář; složky se rozbalují a sbalují kliknutím</td></tr>
+    <tr><td>pravá část</td><td>obsah vybraného souboru</td></tr>
+  </table>
+  <h3>Formát diskety</h3>
+  <p>Volba <b>Formát: automaticky</b> přečte boot sektor a podle něj pozná, kolik má disketa stran a sektorů na stopu.
+  Ručně se formát volí jen tehdy, když boot sektor formát nepopisuje nebo je poškozený.</p>
+  <table>
+    <tr><th>Volba</th><th>Disketa</th></tr>
+    <tr><td>720 kB</td><td>2 strany, 9 sektorů; nejběžnější formát</td></tr>
+    <tr><td>360 kB</td><td>1 strana, 9 sektorů; starší jednostranné diskety</td></tr>
+    <tr><td>800 kB, 400 kB</td><td>10 sektorů na stopu</td></tr>
+    <tr><td>880 kB, 440 kB</td><td>11 sektorů na stopu</td></tr>
+  </table>
+  <h3>Výměna diskety</h3>
+  <p>Vyměňte disketu a znovu klikněte na <b>Načíst disketu z mechaniky</b>. Nová disketa dostane vlastní záložku.
+  Předchozí záložka zůstane otevřená se značkou „vyjmuta“ a s tím, co se z ní stihlo načíst. Soubory, které jste
+  si z ní neprohlédli, už dočíst nejdou.</p>
+  <div class="warn">Program nepozná, že jste disketu vyměnili. Po každé výměně proto disketu načtěte znovu,
+  jinak by se soubory četly podle adresáře předchozí diskety.</div>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Prohlížení souborů</h2>
+  <p>Klikněte na soubor v adresáři. Z diskety se přečtou stopy, na kterých leží, a soubor se zobrazí vpravo.
+  Způsob zobrazení program zvolí sám a dá se přepnout tlačítky nad obsahem.</p>
+  <table>
+    <tr><th>Zobrazení</th><th>Kdy se nabídne</th></tr>
+    <tr><td><b>Text</b></td><td>vždy; výchozí u textových souborů</td></tr>
+    <tr><td><b>Hex</b></td><td>vždy; výchozí u programů a ostatních binárních souborů</td></tr>
+    <tr><td><b>Obrázek</b></td><td>Degas (PI1–PI3, komprimované PC1–PC3), NEOchrome (NEO), Doodle (DOO)</td></tr>
+    <tr><td><b>Výpis GFA</b></td><td>programy GFA BASIC 3.x (kapitola 6)</td></tr>
+  </table>
+  <figure>
+    <img src="../img/obrazek.png" alt="">
+    <figcaption>Obrázek ve formátu Degas. Pod názvem souboru je velikost, datum a rozpoznaný typ.</figcaption>
+  </figure>
+  <h3>Kódování textu</h3>
+  <p>U textu a výpisu GFA je přepínač <b>Kódování</b>. Když se místo háčků a čárek zobrazují jiné znaky, zkuste
+  postupně <b>Kamenických</b>, <b>Windows-1250</b> a <b>ISO 8859-2</b>. Výchozí je znaková sada Atari ST.</p>
+  <h3>Další údaje</h3>
+  <ul>
+    <li>U programů (<code>PRG</code>, <code>TOS</code>, <code>ACC</code> …) se pod názvem vypíše velikost kódu, dat a BSS.</li>
+    <li><b>Zobrazit smazané</b> ukáže i smazané položky adresáře, přeškrtnuté. Jejich obsah nemusí odpovídat,
+    místo po nich už mohlo být přepsáno.</li>
+    <li>Řádek <b>[celý disk po sektorech]</b> ukáže hex výpis libovolného sektoru s číslem stopy a strany.
+    U diskety v mechanice se stopa přečte až po kliknutí na „Načíst stopu“.</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">6</span>Programy v GFA BASICu</h2>
+  <p>Soubory <code>.GFA</code> jsou uložené ve zkrácené (tokenizované) podobě a běžně se dají přečíst jen
+  v GFA BASICu. ST disketa je převede na čitelný výpis sama.</p>
+  <figure>
+    <img src="../img/vypis_gfa.png" alt="">
+    <figcaption>Výpis programu: modře příkazy, fialově funkce, hnědě řetězce, tyrkysově čísla, šedě komentáře</figcaption>
+  </figure>
+  <ul>
+    <li>Odsazení odpovídá editoru GFA BASICu.</li>
+    <li>Každá procedura a funkce je oddělená linkou. Seznam <b>Přejít na …</b> nad výpisem na ně skočí.</li>
+    <li><b>Uložit výpis .LST</b> uloží program jako text, který GFA BASIC načte příkazem Merge.</li>
+    <li>Přepínač <b>Kódování</b> platí i tady, hodí se u českých textů v řetězcích a komentářích.</li>
+  </ul>
+  <table>
+    <tr><th>Soubor</th><th>Co uvidíte</th></tr>
+    <tr><td>GFA BASIC 3.5 a novější</td><td>úplný výpis</td></tr>
+    <tr><td>GFA BASIC 2.x a 3.0</td><td>hex výpis a poznámka, že tuto verzi program neumí</td></tr>
+    <tr><td>program uložený s ochranou (PSAVE)</td><td>výpis s náhradními jmény proměnných, např. <code>v2_1A</code>; skutečná jména v souboru nejsou</td></tr>
+    <tr><td>řádek s daty INLINE</td><td>příkaz INLINE a pod ním poznámka s délkou dat</td></tr>
+  </table>
+  <div class="note">Výpis byl porovnán se sedmi programy, ke kterým existuje originální výpis z GFA BASICu
+  (přes 5 700 řádků), a vyšel shodně. Desetinné konstanty se vypisují na 13 platných číslic.</div>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Ukládání do počítače</h2>
+  <table>
+    <tr><th>Tlačítko</th><th>Co uloží</th><th>Co se kvůli tomu čte</th></tr>
+    <tr><td><b>Stáhnout soubor</b></td><td>vybraný soubor beze změny</td><td>nic navíc, soubor už je načtený</td></tr>
+    <tr><td><b>Uložit jako PNG</b></td><td>zobrazený obrázek, 640 × 400 bodů</td><td>nic navíc</td></tr>
+    <tr><td><b>Uložit výpis .LST</b></td><td>výpis programu v GFA BASICu</td><td>nic navíc</td></tr>
+    <tr><td><b>Stáhnout všechny soubory jako ZIP</b></td><td>všechny soubory i se složkami a původními daty</td><td>stopy se soubory</td></tr>
+    <tr><td><b>Načíst celou disketu a uložit .MSA</b></td><td>obraz diskety ve formátu MSA</td><td>všechny zbývající stopy</td></tr>
+    <tr><td><b>Načíst celou disketu a uložit .ST</b></td><td>obraz diskety ve formátu ST</td><td>všechny zbývající stopy</td></tr>
+  </table>
+  <p>Soubory se ukládají tam, kam váš prohlížeč ukládá stažené soubory. Do pole <b>Název pro uložení</b> napište
+  jméno, pod kterým se má uložit obraz a ZIP. Předvyplní se jmenovka diskety, pokud nějakou má.</p>
+  <p>Při čtení celé diskety ukazuje údaj <b>Načteno stop</b>, jak daleko čtení je.</p>
+  <div class="warn">Když jsou na disketě nečitelné sektory, objeví se oranžová poznámka s čísly stop.
+  Obraz se uloží i tak, vadné sektory v něm ale nejsou platná data. Takový obraz si označte.</div>
+</section>
+
+<section>
+  <h2><span class="n">8</span>Nastavení</h2>
+  <p>Tlačítko <b>Nastavení</b> otevře panel se třemi údaji. Po změně klikněte na <b>Uložit nastavení</b>.</p>
+  <figure>
+    <img src="../img/nastaveni.png" alt="">
+    <figcaption>Nastavení s výsledkem testu spojení</figcaption>
+  </figure>
+  <table>
+    <tr><th>Pole</th><th>Co zadat</th></tr>
+    <tr><td><b>Cesta ke gw</b></td><td>soubor <code>gw.exe</code> nebo složku, ve které leží, např. <code>C:\Greaseweazle\gw.exe</code>. Prázdné pole: program hledá sám.</td></tr>
+    <tr><td><b>Port</b></td><td>sériový port Greaseweazle, např. <code>COM5</code> nebo <code>/dev/ttyACM0</code>. Pod polem jsou vypsané porty nalezené v počítači. Prázdné pole: <code>gw</code> si port najde sám.</td></tr>
+    <tr><td><b>Mechanika</b></td><td>stejná hodnota jako volba <code>--drive</code> programu <code>gw</code>: A nebo B u kabelu pro PC, 0 až 2 u zapojení Shugart.</td></tr>
+  </table>
+  <p><b>Otestovat spojení</b> spustí <code>gw info</code> a ukáže jeho výpis. Test používá uložené hodnoty,
+  proto nejdřív uložte.</p>
+  <p>Nastavení se ukládá do souboru <code>.st_disketa.json</code> ve vaší domovské složce a při dalším spuštění
+  se načte samo.</p>
+  <h3>Volby na příkazové řádce</h3>
+  <p>Nejsou nutné. Když je použijete, mají přednost před uloženým nastavením.</p>
+  <table>
+    <tr><th>Volba</th><th>Význam</th></tr>
+    <tr><td><code>--gw CESTA</code></td><td>cesta ke <code>gw</code></td></tr>
+    <tr><td><code>--device PORT</code></td><td>sériový port</td></tr>
+    <tr><td><code>--drive X</code></td><td>mechanika</td></tr>
+    <tr><td><code>--port ČÍSLO</code></td><td>port místní stránky, výchozí 8737</td></tr>
+    <tr><td><code>--no-browser</code></td><td>neotevírat prohlížeč</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">9</span>Hotové obrazy disket</h2>
+  <p>Obrazy <code>.MSA</code> a <code>.ST</code>, které už máte, se dají prohlížet stejně jako disketa v mechanice.
+  Klikněte na <b>Otevřít obrazy disket</b>, nebo soubory přetáhněte kamkoli na stránku. Můžete jich vybrat víc
+  najednou, každý dostane svou záložku.</p>
+  <ul>
+    <li>Obraz MSA se dá tlačítkem <b>Uložit jako obraz .ST</b> převést na ST.</li>
+    <li>K prohlížení obrazů není potřeba Greaseweazle ani Python: stačí v prohlížeči otevřít soubor
+    <code>st_prohlizec.html</code>, který je součástí projektu.</li>
+  </ul>
+  <figure class="narrow">
+    <img src="../img/hex.png" alt="">
+    <figcaption>Hex výpis souboru</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="n">10</span>Když něco nejde</h2>
+  <p>Když se disketa nepodaří načíst, otevře se záložka <b>Nečitelná disketa</b> s důvodem a s posledními řádky
+  výpisu programu <code>gw</code>.</p>
+  <figure>
+    <img src="../img/chyba_cteni.png" alt="">
+    <figcaption>Neúspěšné čtení: důvod, výpis gw a tlačítko pro nový pokus</figcaption>
+  </figure>
+  <table>
+    <tr><th>Hlášení nebo projev</th><th>Co s tím</th></tr>
+    <tr><td>Program gw nebyl nalezen</td><td>v Nastavení zadejte cestu ke <code>gw.exe</code> a uložte</td></tr>
+    <tr><td>Greaseweazle nebyl nalezen</td><td>zkontrolujte USB kabel; v Nastavení zadejte port; vyzkoušejte <code>gw info</code></td></tr>
+    <tr><td>K portu není přístup</td><td>Windows: zavřete jiný program, který port používá. Linux: přidejte se do skupiny <code>dialout</code> a přihlaste se znovu.</td></tr>
+    <tr><td>V mechanice není disketa, nebo se netočí</td><td>zasuňte disketu až na doraz; zkontrolujte napájení mechaniky a volbu Mechanika</td></tr>
+    <tr><td>Mechanika nenašla stopu 0</td><td>špatně zvolená mechanika (A/B) nebo otočený kabel</td></tr>
+    <tr><td>Na první stopě se nepodařilo přečíst žádný sektor</td><td>disketa je poškozená, neformátovaná nebo v jiném formátu (Amiga, Mac). Zkuste nový pokus, případně očistit hlavy.</td></tr>
+    <tr><td>Souborový systém TOS/FAT nenalezen</td><td>hra s vlastním formátem nebo poškozený boot sektor; obsah lze projít po sektorech</td></tr>
+    <tr><td>Boot sektor nepopisuje formát diskety</td><td>zvolte formát ručně a načtěte disketu znovu</td></tr>
+    <tr><td>Nečitelné sektory na stopách …</td><td>zkuste soubor načíst znovu; někdy pomůže disketu vyjmout a vložit</td></tr>
+    <tr><td>Pomocný program neodpovídá</td><td>okno s <code>st_disketa.py</code> bylo zavřeno; spusťte program znovu a obnovte stránku</td></tr>
+    <tr><td>Adresář vypadá jako z jiné diskety</td><td>po výměně diskety jste ji nenačetli znovu</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">11</span>Omezení</h2>
+  <ul>
+    <li>Čte se nejvýš 80 stop na stranu. Diskety formátované na 81 nebo 82 stop se nenačtou celé.</li>
+    <li>Diskety s ochranou proti kopírování a hry s vlastním formátem nemají adresář. Na jejich archivaci
+    použijte přímo <code>gw read</code> s výstupem do formátu SCP nebo HFE.</li>
+    <li>Diskety s vysokou hustotou (1,44 MB) program nenabízí.</li>
+    <li>Na disketu se nezapisuje, program jen čte.</li>
+    <li>Výpis GFA BASICu umí jen formát verze 3.5 a novější.</li>
+    <li>Stránka je jen česky.</li>
+    <li>Na Linuxu program se skutečnou mechanikou zatím vyzkoušen nebyl.</li>
+  </ul>
+
+  <section class="flow">
+  <h2><span class="n">12</span>Jak to funguje</h2>
+  <p><code>st_disketa.py</code> spustí malý webový server, který poslouchá jen na adrese <code>127.0.0.1</code>,
+  tedy jen pro váš počítač. Stránka v prohlížeči mu posílá požadavky na konkrétní stopy.</p>
+  <ol>
+    <li>Stránka si vyžádá stopu 0. Server spustí <code>gw read --format=atarist.720 --tracks=c=0:h=0</code>.</li>
+    <li>Z boot sektoru stránka zjistí formát a spočítá, kde leží tabulka FAT a kořenový adresář. Na běžné
+    disketě 720 kB zabírají přesně obě strany stopy 0.</li>
+    <li>Pro každý podadresář si vyžádá stopy, na kterých leží.</li>
+    <li>Po kliknutí na soubor projde podle tabulky FAT jeho clustery, převede je na čísla stop a vyžádá si ty,
+    které ještě nemá.</li>
+  </ol>
+  <p>Rozbor souborového systému, formátu MSA, obrázků i GFA BASICu dělá stránka sama. Mimo váš počítač se
+  nic neodesílá.</p>
+  </section>
+</section>
+
+<section>
+  <h2><span class="n">13</span>Historie verzí</h2>
+  <p>Číslo verze je vidět dole na stránce, v souboru <code>st_disketa.py</code> a v názvu tohoto návodu.</p>
+  <table>
+    <tr><th style="width:13%">Verze</th><th>Co se změnilo</th></tr>
+    <tr><td><b>1.4</b></td><td>První zveřejněná verze. Číslo verze na stránce, samostatný <code>st_prohlizec.html</code>, zdroje ve složce <code>src/</code>, návod v PDF.</td></tr>
+    <tr><td><b>1.3</b></td><td>Oprava: při nečitelné disketě zůstával zobrazený obsah té předchozí. Nová záložka „Nečitelná disketa“, hlášení nahoře, druhý důkladnější pokus o čtení. Barevný výpis GFA s čísly řádků a skokem na procedury.</td></tr>
+    <tr><td><b>1.2</b></td><td>Výpis programů GFA BASIC 3.x a uložení jako <code>.LST</code>. Licence změněna na GNU GPL v2.</td></tr>
+    <tr><td><b>1.1</b></td><td>Nastavení cesty ke <code>gw</code>, portu a mechaniky přímo na stránce, test spojení, seznam portů.</td></tr>
+    <tr><td><b>1.0</b></td><td>Čtení diskety přímo z mechaniky: adresář, soubor po kliknutí, obraz na požádání. Prohlížení obrazů MSA a ST, text, hex, obrázky.</td></tr>
+  </table>
+
+  <section class="flow">
+  <h2><span class="n">14</span>Licence a poděkování</h2>
+  <p>Program je volně šiřitelný pod licencí <b>GNU General Public License verze 2</b> a je bez jakékoli záruky.
+  Plné znění licence je v souboru <code>LICENSE</code>.</p>
+  <ul>
+    <li>Výpis GFA BASICu je převod programu <b>gfalist / SKY</b>, © 1992–2001 Peter Backes, s pozdějšími
+    opravami Markuse Hoffmanna a dalších (github.com/mmuman/gfalist).</li>
+    <li>Čtení disket dělá <b>Greaseweazle</b> Keira Frasera (github.com/keirf/greaseweazle).</li>
+  </ul>
+  <p>Autor: Zdeněk Kotrba, 2026.</p>
+  </section>
+</section>
+
+</body>
+</html>

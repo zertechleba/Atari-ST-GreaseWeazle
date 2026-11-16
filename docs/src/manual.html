@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ST disketa – manual</title>
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<div class="cover">
+  <div class="band">
+    <h1>ST disketa</h1>
+    <p class="sub">Atari ST floppy browser for Greaseweazle<br>User manual</p>
+  </div>
+  <figure>
+    <img src="../img/obrazek.png" alt="">
+    <figcaption>A disk in the drive: directory on the left, a picture read straight from the disk on the right</figcaption>
+  </figure>
+  <div class="meta"><span>Version <span class="ver"></span> · November 2026</span><span>Zdeněk Kotrba · GNU GPL v2</span></div>
+</div>
+
+<section>
+  <h2>Contents</h2>
+  <ol class="toc">
+    <li><span class="n">1</span>What the program does</li>
+    <li><span class="n">2</span>What you need</li>
+    <li><span class="n">3</span>First start</li>
+    <li><span class="n">4</span>Reading a disk</li>
+    <li><span class="n">5</span>Viewing files</li>
+    <li><span class="n">6</span>GFA BASIC programs</li>
+    <li><span class="n">7</span>Saving to your computer</li>
+    <li><span class="n">8</span>Settings</li>
+    <li><span class="n">9</span>Existing disk images</li>
+    <li><span class="n">10</span>Troubleshooting</li>
+    <li><span class="n">11</span>Limitations</li>
+    <li><span class="n">12</span>How it works</li>
+    <li><span class="n">13</span>Version history</li>
+    <li><span class="n">14</span>Licence and credits</li>
+  </ol>
+  <div class="note">The page of the program is in Czech. This manual gives each Czech label in <b>bold</b>
+  with its meaning in brackets.</div>
+
+  <section class="flow">
+  <h2><span class="n">1</span>What the program does</h2>
+  <p>With a box of Atari ST floppies and a Greaseweazle, the usual routine is to image every disk to an MSA or ST
+  file first and only then look inside with an emulator. That takes time, and most disks are not wanted in full.</p>
+  <p>ST disketa works the other way round. It behaves like the Atari itself: insert a disk and see what is on it.</p>
+  <table>
+    <tr><th>What you want</th><th>What is read from the disk</th><th>How long it takes</th></tr>
+    <tr><td>see what is on the disk</td><td>track 0 and the tracks holding subdirectories</td><td>a few seconds</td></tr>
+    <tr><td>view or download one file</td><td>only the tracks that file occupies</td><td>depends on file size</td></tr>
+    <tr><td>a full image or all files</td><td>the rest of the disk</td><td>like a normal full read</td></tr>
+  </table>
+  <p>Tracks that were read once are not read again. If you look at a few files and then decide to save the whole
+  image, only the missing part is read.</p>
+  <p>Files can be viewed directly: text, pictures, hex dump and GFA BASIC programs. No emulator is needed.</p>
+  </section>
+</section>
+
+<section>
+  <h2><span class="n">2</span>What you need</h2>
+  <table>
+    <tr><th>Item</th><th>Note</th></tr>
+    <tr><td>a <b>Greaseweazle</b> with a 3.5" floppy drive</td><td>any version the <code>gw</code> program can drive</td></tr>
+    <tr><td><b>Greaseweazle Tools</b></td><td><code>gw.exe</code> (Windows) or <code>gw</code> (Linux); from github.com/keirf/greaseweazle</td></tr>
+    <tr><td><b>Python 3.8 or newer</b></td><td>from python.org; no extra packages are installed</td></tr>
+    <tr><td>a web browser</td><td>Chrome, Edge or Firefox</td></tr>
+    <tr><td>the file <code>st_disketa.py</code></td><td>the whole program is this single file</td></tr>
+  </table>
+  <div class="note">First make sure the Greaseweazle works on its own: <code>gw info</code> should print the model and firmware version.</div>
+
+  <section class="flow">
+  <h2><span class="n">3</span>First start</h2>
+  <ol class="steps">
+    <li>Save <code>st_disketa.py</code> anywhere, for example next to Greaseweazle Tools.</li>
+    <li>Open a command prompt in that folder and run:
+      <pre>python st_disketa.py</pre>
+      On Windows <code>py st_disketa.py</code> works too.</li>
+    <li>The page <code>http://127.0.0.1:8737/</code> opens in the browser. Leave the command prompt window open, the program runs in it. Stop it with <kbd>Ctrl</kbd>+<kbd>C</kbd>.</li>
+    <li>If <code>gw</code> is not found, <b>Nastavení</b> (Settings) opens straight away. Enter the path to <code>gw.exe</code> and save (chapter 8).</li>
+    <li>Click <b>Otestovat spojení</b> (Test connection). The Greaseweazle model and firmware version should appear.</li>
+  </ol>
+  <p>The program looks for <code>gw</code> in the saved settings, in its own folder and on the system PATH.
+  When first opened, the page shows a small sample disk so you can try the controls without a drive.</p>
+  </section>
+</section>
+
+<section>
+  <h2><span class="n">4</span>Reading a disk</h2>
+  <ol class="steps">
+    <li>Insert a floppy into the drive.</li>
+    <li>Click <b>Načíst disketu z mechaniky</b> (Read disk from drive).</li>
+    <li>The status bar shows „Čtu boot sektor …“ (reading boot sector) and „Čtu adresář …“ (reading directory). Shortly after, the contents appear on the left.</li>
+  </ol>
+  <figure>
+    <img src="../img/adresar.png" alt="">
+    <figcaption>A disk after its directory was read. Only 2 of 160 tracks have been read so far.</figcaption>
+  </figure>
+  <h3>What is on the page</h3>
+  <table>
+    <tr><th>Part</th><th>Meaning</th></tr>
+    <tr><td>status bar</td><td>what is happening; errors are shown in orange</td></tr>
+    <tr><td>disk tabs</td><td>each disk gets a tab marked <b>v mechanice</b> (in the drive) or <b>vyjmuta</b> (removed)</td></tr>
+    <tr><td>disk facts</td><td><b>Formát</b>, <b>Geometrie</b>, <b>Jmenovka</b> (label), <b>Souborů</b> (files), <b>Obsazeno</b> (used), <b>Volné</b> (free), <b>Načteno stop</b> (tracks read)</td></tr>
+    <tr><td><b>Obsah diskety</b> (disk contents)</td><td>the directory; click a folder to expand or collapse it. Columns: <b>Název</b> (name), <b>Bajtů</b> (bytes), <b>Datum</b> (date)</td></tr>
+    <tr><td>right-hand pane</td><td>contents of the selected file</td></tr>
+  </table>
+  <h3>Disk format</h3>
+  <p><b>Formát: automaticky</b> (automatic) reads the boot sector and works out the number of sides and sectors per
+  track. Choose a format by hand only when the boot sector does not describe the format or is damaged.</p>
+  <table>
+    <tr><th>Choice</th><th>Disk</th></tr>
+    <tr><td>720 kB</td><td>2 sides, 9 sectors; the most common format</td></tr>
+    <tr><td>360 kB</td><td>1 side, 9 sectors; older single-sided disks</td></tr>
+    <tr><td>800 kB, 400 kB</td><td>10 sectors per track</td></tr>
+    <tr><td>880 kB, 440 kB</td><td>11 sectors per track</td></tr>
+  </table>
+  <h3>Changing the disk</h3>
+  <p>Swap the disk and click <b>Načíst disketu z mechaniky</b> again. The new disk gets its own tab. The previous
+  tab stays open, marked <b>vyjmuta</b>, with whatever was read from it. Files you did not open can no longer be read.</p>
+  <div class="warn">The program cannot tell that the disk was swapped. Read the disk again after every swap,
+  otherwise files would be read using the previous disk's directory.</div>
+</section>
+
+<section>
+  <h2><span class="n">5</span>Viewing files</h2>
+  <p>Click a file in the directory. The tracks it occupies are read and the file is shown on the right.
+  The program picks a view itself; switch it with the buttons above the contents.</p>
+  <table>
+    <tr><th>View</th><th>When it is offered</th></tr>
+    <tr><td><b>Text</b></td><td>always; default for text files</td></tr>
+    <tr><td><b>Hex</b></td><td>always; default for programs and other binary files</td></tr>
+    <tr><td><b>Obrázek</b> (picture)</td><td>Degas (PI1–PI3, compressed PC1–PC3), NEOchrome (NEO), Doodle (DOO)</td></tr>
+    <tr><td><b>Výpis GFA</b> (GFA listing)</td><td>GFA BASIC 3.x programs (chapter 6)</td></tr>
+  </table>
+  <figure>
+    <img src="../img/obrazek.png" alt="">
+    <figcaption>A Degas picture. Size, date and detected type are shown under the file name.</figcaption>
+  </figure>
+  <h3>Text encoding</h3>
+  <p>Text and GFA listings have a <b>Kódování</b> (encoding) selector. The default is the Atari ST character set.
+  For Czech and Slovak texts try <b>Kamenických</b>, <b>Windows-1250</b> and <b>ISO 8859-2</b>.</p>
+  <h3>Other details</h3>
+  <ul>
+    <li>For programs (<code>PRG</code>, <code>TOS</code>, <code>ACC</code> …) the sizes of code, data and BSS are shown.</li>
+    <li><b>Zobrazit smazané</b> (show deleted) also lists deleted directory entries, struck through. Their contents
+    may be wrong because the space may have been overwritten.</li>
+    <li>The row <b>[celý disk po sektorech]</b> (whole disk by sector) shows a hex dump of any sector with its track
+    and side. For a disk in the drive, a track is read only after you click <b>Načíst stopu</b> (read track).</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="n">6</span>GFA BASIC programs</h2>
+  <p><code>.GFA</code> files are stored in a tokenised form that normally only GFA BASIC can read.
+  ST disketa turns them into a readable listing itself.</p>
+  <figure>
+    <img src="../img/vypis_gfa.png" alt="">
+    <figcaption>A listing: commands in blue, functions in purple, strings in brown, numbers in teal, comments in grey</figcaption>
+  </figure>
+  <ul>
+    <li>Indentation matches the GFA BASIC editor.</li>
+    <li>Each procedure and function is separated by a rule. The <b>Přejít na …</b> (jump to) list above the listing jumps to them.</li>
+    <li><b>Uložit výpis .LST</b> (save listing) saves the program as text that GFA BASIC loads with Merge.</li>
+    <li>The <b>Kódování</b> selector applies here as well, for national characters in strings and comments.</li>
+  </ul>
+  <table>
+    <tr><th>File</th><th>What you get</th></tr>
+    <tr><td>GFA BASIC 3.5 and later</td><td>a full listing</td></tr>
+    <tr><td>GFA BASIC 2.x and 3.0</td><td>a hex dump and a note that this version is not supported</td></tr>
+    <tr><td>a program saved with protection (PSAVE)</td><td>a listing with placeholder variable names such as <code>v2_1A</code>; the real names are not in the file</td></tr>
+    <tr><td>a line with INLINE data</td><td>the INLINE command followed by a note giving the data length</td></tr>
+  </table>
+  <div class="note">The lister was compared against seven programs for which an original GFA BASIC listing exists
+  (over 5,700 lines) and matched them. Floating-point constants are printed with 13 significant digits.</div>
+</section>
+
+<section>
+  <h2><span class="n">7</span>Saving to your computer</h2>
+  <table>
+    <tr><th>Button</th><th>What it saves</th><th>What has to be read</th></tr>
+    <tr><td><b>Stáhnout soubor</b> (download file)</td><td>the selected file, unchanged</td><td>nothing more, the file is already loaded</td></tr>
+    <tr><td><b>Uložit jako PNG</b></td><td>the picture shown, 640 × 400 pixels</td><td>nothing more</td></tr>
+    <tr><td><b>Uložit výpis .LST</b></td><td>the GFA BASIC listing</td><td>nothing more</td></tr>
+    <tr><td><b>Stáhnout všechny soubory jako ZIP</b> (all files as ZIP)</td><td>all files with folders and original dates</td><td>the tracks holding files</td></tr>
+    <tr><td><b>Načíst celou disketu a uložit .MSA</b> (read whole disk, save .MSA)</td><td>a disk image in MSA format</td><td>all remaining tracks</td></tr>
+    <tr><td><b>Načíst celou disketu a uložit .ST</b></td><td>a disk image in ST format</td><td>all remaining tracks</td></tr>
+  </table>
+  <p>Files go wherever your browser saves downloads. Type the name for the image and the ZIP into
+  <b>Název pro uložení</b> (name for saving). It is pre-filled with the volume label if the disk has one.</p>
+  <p>While the whole disk is being read, <b>Načteno stop</b> shows the progress.</p>
+  <div class="warn">If the disk has unreadable sectors, an orange note <b>Nečitelné sektory na stopách</b> lists
+  the tracks. The image is saved anyway, but the bad sectors in it are not valid data. Label such an image.</div>
+</section>
+
+<section>
+  <h2><span class="n">8</span>Settings</h2>
+  <p>The <b>Nastavení</b> button opens a panel with three fields. After a change click <b>Uložit nastavení</b> (save settings).</p>
+  <figure>
+    <img src="../img/nastaveni.png" alt="">
+    <figcaption>Settings with the result of a connection test</figcaption>
+  </figure>
+  <table>
+    <tr><th>Field</th><th>What to enter</th></tr>
+    <tr><td><b>Cesta ke gw</b> (path to gw)</td><td>the file <code>gw.exe</code> or the folder it is in, e.g. <code>C:\Greaseweazle\gw.exe</code>. Empty: the program searches itself.</td></tr>
+    <tr><td><b>Port</b></td><td>the Greaseweazle serial port, e.g. <code>COM5</code> or <code>/dev/ttyACM0</code>. Ports found on the computer are listed under the field. Empty: <code>gw</code> finds the port itself.</td></tr>
+    <tr><td><b>Mechanika</b> (drive)</td><td>same value as the <code>--drive</code> option of <code>gw</code>: A or B with a PC cable, 0 to 2 with Shugart wiring.</td></tr>
+  </table>
+  <p><b>Otestovat spojení</b> runs <code>gw info</code> and shows its output. The test uses the saved values,
+  so save first.</p>
+  <p>Settings are stored in <code>.st_disketa.json</code> in your home folder and loaded on the next start.</p>
+  <h3>Command-line options</h3>
+  <p>Not required. When given, they override the saved settings.</p>
+  <table>
+    <tr><th>Option</th><th>Meaning</th></tr>
+    <tr><td><code>--gw PATH</code></td><td>path to <code>gw</code></td></tr>
+    <tr><td><code>--device PORT</code></td><td>serial port</td></tr>
+    <tr><td><code>--drive X</code></td><td>drive</td></tr>
+    <tr><td><code>--port NUMBER</code></td><td>port of the local page, default 8737</td></tr>
+    <tr><td><code>--no-browser</code></td><td>do not open the browser</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">9</span>Existing disk images</h2>
+  <p><code>.MSA</code> and <code>.ST</code> images you already have can be viewed just like a disk in the drive.
+  Click <b>Otevřít obrazy disket</b> (open disk images) or drop the files anywhere on the page. Several can be
+  opened at once; each gets its own tab.</p>
+  <ul>
+    <li>An MSA image can be converted to ST with <b>Uložit jako obraz .ST</b>.</li>
+    <li>Viewing images needs neither a Greaseweazle nor Python: open <code>st_prohlizec.html</code>, which is part
+    of the project, in a browser.</li>
+  </ul>
+  <figure class="narrow">
+    <img src="../img/hex.png" alt="">
+    <figcaption>Hex dump of a file</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="n">10</span>Troubleshooting</h2>
+  <p>When a disk cannot be read, a tab <b>Nečitelná disketa</b> (unreadable disk) opens with the reason and the last
+  lines printed by <code>gw</code>. <b>Zkusit načíst znovu</b> tries again.</p>
+  <figure>
+    <img src="../img/chyba_cteni.png" alt="">
+    <figcaption>A failed read: the reason, the gw output and the retry button</figcaption>
+  </figure>
+  <table>
+    <tr><th>Message or symptom</th><th>What to do</th></tr>
+    <tr><td>Program gw nebyl nalezen<br>(gw not found)</td><td>enter the path to <code>gw.exe</code> in Settings and save</td></tr>
+    <tr><td>Greaseweazle nebyl nalezen<br>(Greaseweazle not found)</td><td>check the USB cable; enter the port in Settings; try <code>gw info</code></td></tr>
+    <tr><td>K portu není přístup<br>(no access to the port)</td><td>Windows: close any other program using the port. Linux: join the <code>dialout</code> group and log in again.</td></tr>
+    <tr><td>V mechanice není disketa, nebo se netočí<br>(no disk, or it does not spin)</td><td>push the disk fully in; check drive power and the drive setting</td></tr>
+    <tr><td>Mechanika nenašla stopu 0<br>(track 0 not found)</td><td>wrong drive selected (A/B) or a reversed cable</td></tr>
+    <tr><td>Na první stopě se nepodařilo přečíst žádný sektor<br>(no sector readable on the first track)</td><td>the disk is damaged, unformatted or in another format (Amiga, Mac). Retry, or clean the heads.</td></tr>
+    <tr><td>Souborový systém TOS/FAT nenalezen<br>(no file system)</td><td>a game with a custom format or a damaged boot sector; browse it by sector</td></tr>
+    <tr><td>Boot sektor nepopisuje formát diskety<br>(boot sector gives no format)</td><td>choose the format by hand and read the disk again</td></tr>
+    <tr><td>Nečitelné sektory na stopách …<br>(unreadable sectors on tracks)</td><td>try reading the file again; removing and reinserting the disk sometimes helps</td></tr>
+    <tr><td>Pomocný program neodpovídá<br>(helper not responding)</td><td>the window running <code>st_disketa.py</code> was closed; start it again and reload the page</td></tr>
+    <tr><td>The directory looks like another disk's</td><td>the disk was swapped without reading it again</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">11</span>Limitations</h2>
+  <ul>
+    <li>At most 80 tracks per side are read. Disks formatted to 81 or 82 tracks are not read completely.</li>
+    <li>Copy-protected disks and games with custom formats have no directory. To archive those, use
+    <code>gw read</code> directly with SCP or HFE output.</li>
+    <li>High-density (1.44 MB) disks are not offered.</li>
+    <li>Nothing is written to the disk; the program only reads.</li>
+    <li>The GFA BASIC lister handles file format version 3.5 and later only.</li>
+    <li>The page is in Czech only.</li>
+    <li>On Linux the program has not been tried with a real drive yet.</li>
+  </ul>
+
+  <section class="flow">
+  <h2><span class="n">12</span>How it works</h2>
+  <p><code>st_disketa.py</code> starts a small web server that listens on <code>127.0.0.1</code> only, that is,
+  for your computer alone. The page in the browser asks it for specific tracks.</p>
+  <ol>
+    <li>The page asks for track 0. The server runs <code>gw read --format=atarist.720 --tracks=c=0:h=0</code>.</li>
+    <li>From the boot sector the page learns the format and works out where the FAT and the root directory are.
+    On a standard 720 kB disk they fill exactly both sides of track 0.</li>
+    <li>For each subdirectory it asks for the tracks holding it.</li>
+    <li>When a file is clicked, it follows the file's clusters through the FAT, converts them to track numbers and
+    asks for those it does not have yet.</li>
+  </ol>
+  <p>The file system, the MSA format, pictures and GFA BASIC are all decoded by the page itself. Nothing is sent
+  outside your computer.</p>
+  </section>
+</section>
+
+<section>
+  <h2><span class="n">13</span>Version history</h2>
+  <p>The version number is shown at the bottom of the page, in <code>st_disketa.py</code> and in the name of this manual.</p>
+  <table>
+    <tr><th style="width:13%">Version</th><th>What changed</th></tr>
+    <tr><td><b>1.4</b></td><td>First public release. Version number on the page, stand-alone <code>st_prohlizec.html</code>, sources in <code>src/</code>, PDF manual.</td></tr>
+    <tr><td><b>1.3</b></td><td>Fix: with an unreadable disk the previous disk's contents stayed on screen. New "unreadable disk" tab, status bar at the top, a second, more thorough read attempt. Coloured GFA listing with line numbers and a procedure jump list.</td></tr>
+    <tr><td><b>1.2</b></td><td>GFA BASIC 3.x listing and saving as <code>.LST</code>. Licence changed to GNU GPL v2.</td></tr>
+    <tr><td><b>1.1</b></td><td>Path to <code>gw</code>, port and drive set on the page, connection test, list of ports.</td></tr>
+    <tr><td><b>1.0</b></td><td>Reading a disk straight from the drive: directory, file on click, image on request. Viewing MSA and ST images, text, hex, pictures.</td></tr>
+  </table>
+
+  <section class="flow">
+  <h2><span class="n">14</span>Licence and credits</h2>
+  <p>The program is free software under the <b>GNU General Public License version 2</b> and comes with no warranty.
+  The full text is in the file <code>LICENSE</code>.</p>
+  <ul>
+    <li>The GFA BASIC lister is a port of <b>gfalist / SKY</b>, © 1992–2001 Peter Backes, with later fixes by
+    Markus Hoffmann and others (github.com/mmuman/gfalist).</li>
+    <li>Disks are read by Keir Fraser's <b>Greaseweazle</b> (github.com/keirf/greaseweazle).</li>
+  </ul>
+  <p>Author: Zdeněk Kotrba, 2026.</p>
+  </section>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prohlížeč disket Atari ST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: header with the open control, a row of loaded disks, a facts strip,
+   then two panes (directory on the left, file viewer on the right). */
+:root {
+  --bg: #f2f5f0;
+  --panel: #ffffff;
+  --ink: #1b211c;
+  --muted: #5d6a60;
+  --line: #d3dad2;
+  --accent: #1c7a39;
+  --accent-ink: #ffffff;
+  --sel: #dcefe0;
+  --warn: #9a5200;
+  --warn-bg: #fbeed8;
+  --syn-kw: #0a5aa0; --syn-fn: #7b3aa0; --syn-str: #a24a00; --syn-num: #0c6f66; --syn-rem: #66756a;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131714; --panel: #1b211c; --ink: #e5ebe4; --muted: #95a297; --line: #2d362f;
+    --accent: #62cf7e; --accent-ink: #0b1a0f; --sel: #233829; --warn: #e3a850; --warn-bg: #3a2c12;
+    --syn-kw: #7bb9f6; --syn-fn: #caa2f0; --syn-str: #f1b274; --syn-num: #70d4c8; --syn-rem: #8c9a8f;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131714; --panel: #1b211c; --ink: #e5ebe4; --muted: #95a297; --line: #2d362f;
+  --accent: #62cf7e; --accent-ink: #0b1a0f; --sel: #233829; --warn: #e3a850; --warn-bg: #3a2c12;
+  --syn-kw: #7bb9f6; --syn-fn: #caa2f0; --syn-str: #f1b274; --syn-num: #70d4c8; --syn-rem: #8c9a8f;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.45 var(--font-body);
+  padding: 20px 16px 32px;
+}
+.wrap { max-width: 1280px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; text-wrap: balance; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+.open { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.hint { color: var(--muted); font-size: 13px; }
+[hidden] { display: none !important; }
+#live-box { display: inline-flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button:disabled { opacity: .55; cursor: default; }
+.set-grid { display: grid; grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) minmax(200px, 1fr); gap: 14px 18px; padding: 14px; align-items: start; }
+@media (max-width: 860px) { .set-grid { grid-template-columns: 1fr; } }
+.set-grid label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 500; min-width: 0; }
+.set-grid label input[type="text"], .set-grid label select { width: 100%; font-weight: 400; }
+.set-grid small { color: var(--muted); font-weight: 400; font-size: 12px; }
+.set-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+#test-out { border-top: 1px solid var(--line); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 16em; overflow: auto; }
+input[type="text"] { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; width: 11em; font-family: var(--font-mono); font-size: 13px; }
+button, select, input { font: inherit; color: inherit; }
+button {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 500; }
+button:focus-visible, select:focus-visible, input:focus-visible, tr:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+select, input[type="number"] { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+
+#disks { display: flex; flex-wrap: wrap; gap: 6px; }
+.disk-tab { display: inline-flex; align-items: stretch; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); overflow: hidden; }
+.disk-tab button { border: 0; border-radius: 0; background: transparent; padding: 5px 10px; font-family: var(--font-mono); font-size: 13px; }
+.disk-tab .x { color: var(--muted); padding: 5px 8px; border-left: 1px solid var(--line); }
+.disk-tab.on { border-color: var(--accent); background: var(--sel); }
+.tag { font-family: var(--font-body); font-size: 11px; color: var(--muted); margin-left: 6px; text-transform: uppercase; letter-spacing: .04em; }
+
+#summary { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 0; }
+.facts div { display: flex; gap: 6px; align-items: baseline; }
+.facts dt { color: var(--muted); font-size: 13px; }
+.facts dd { margin: 0; font-family: var(--font-mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { background: var(--warn-bg); color: var(--warn); border-radius: 999px; padding: 2px 10px; font-size: 13px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.panes { display: grid; grid-template-columns: minmax(300px, 5fr) 7fr; gap: 14px; align-items: start; }
+@media (max-width: 860px) { .panes { grid-template-columns: 1fr; } }
+.pane { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.pane-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.pane-head h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.pane-head label { font-size: 13px; color: var(--muted); display: inline-flex; gap: 6px; align-items: center; }
+.scroll { overflow: auto; max-height: 70vh; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--muted); padding: 6px 10px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+td { padding: 4px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td.name { font-family: var(--font-mono); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+td.date { font-variant-numeric: tabular-nums; color: var(--muted); font-family: var(--font-mono); }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--sel); }
+tbody tr.on { background: var(--sel); box-shadow: inset 3px 0 0 var(--accent); }
+tr.deleted td.name { text-decoration: line-through; color: var(--muted); }
+tr.dir td.name { font-weight: 500; }
+.twist { display: inline-block; width: 1.2em; color: var(--muted); }
+.note { padding: 14px; color: var(--muted); margin: 0; }
+
+.file-title { font-family: var(--font-mono); font-size: 14px; font-weight: 500; overflow-wrap: anywhere; }
+.file-meta { color: var(--muted); font-size: 13px; padding: 8px 14px 0; margin: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.spacer { flex: 1; }
+pre { margin: 0; padding: 12px 14px; font: 13px/1.45 var(--font-mono); white-space: pre; tab-size: 8; }
+pre.text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.viewbody { border-top: 1px solid var(--line); overflow: auto; max-height: 70vh; }
+.imgwrap { padding: 14px; }
+canvas { display: block; width: 640px; max-width: 100%; aspect-ratio: 16 / 10; image-rendering: pixelated; border: 1px solid var(--line); background: #000; }
+.pager { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
+.pager input { width: 6em; }
+.pager input#save-name { width: 13em; }
+#status { margin: 0; font-size: 14px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 8px 12px; }
+#status:empty { display: none; }
+#status.err { border-color: var(--warn); border-left-color: var(--warn); background: var(--warn-bg); color: var(--warn); font-weight: 500; }
+.failbox { padding: 14px; display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
+.failbox p { margin: 0; }
+.failbox .why { color: var(--warn); font-weight: 500; }
+.failbox .log { font: 12px/1.4 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+.listing { font: 14px/1.6 var(--font-mono); padding: 10px 14px 14px 0; counter-reset: ln; white-space: pre; min-width: max-content; }
+.cl { display: block; }
+.cl::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 4.2em; margin-right: 1.3em; text-align: right; color: var(--muted); opacity: .65; font-size: 12px; user-select: none; -webkit-user-select: none; }
+.cl.head { margin-top: 1em; padding-top: .35em; border-top: 1px solid var(--line); font-weight: 600; }
+.cl.head:first-child { margin-top: 0; border-top: 0; }
+.s-kw { color: var(--syn-kw); font-weight: 600; } .s-fn { color: var(--syn-fn); } .s-str { color: var(--syn-str); } .s-num { color: var(--syn-num); }
+.s-rem { color: var(--syn-rem); font-style: italic; } .s-proc { font-weight: 600; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+details.how { font-size: 14px; color: var(--muted); }
+details.how summary { cursor: pointer; color: var(--ink); }
+details.how code { font-family: var(--font-mono); font-size: 13px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+details.how p { max-width: 65ch; margin: 8px 0 0; }
+body.drag .wrap { outline: 3px dashed var(--accent); outline-offset: 8px; border-radius: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Prohlížeč disket Atari ST</h1>
+      <p class="sub">Otevře obrazy MSA a ST a ukáže soubory na nich. Nic se nikam neodesílá, vše běží ve vašem prohlížeči.</p>
+    </div>
+    <div class="open">
+      <span id="live-box" hidden>
+        <button id="btn-insert" class="primary" type="button">Načíst disketu z mechaniky</button>
+        <select id="fmt" aria-label="Formát diskety">
+          <option value="auto">Formát: automaticky</option>
+          <option value="atarist.720">720 kB (2 strany, 9 sektorů)</option>
+          <option value="atarist.360">360 kB (1 strana, 9 sektorů)</option>
+          <option value="atarist.800">800 kB (2 strany, 10 sektorů)</option>
+          <option value="atarist.400">400 kB (1 strana, 10 sektorů)</option>
+          <option value="atarist.880">880 kB (2 strany, 11 sektorů)</option>
+          <option value="atarist.440">440 kB (1 strana, 11 sektorů)</option>
+        </select>
+        <button id="btn-settings" type="button" aria-expanded="false" aria-controls="settings">Nastavení</button>
+      </span>
+      <button id="btn-open" class="primary" type="button">Otevřít obrazy disket</button>
+      <input type="file" id="file-input" multiple hidden>
+      <span class="hint">nebo je přetáhněte kamkoli na stránku, klidně víc najednou</span>
+    </div>
+  </header>
+
+  <p id="status" role="status" aria-live="polite"></p>
+
+  <section id="settings" class="pane" aria-label="Nastavení Greaseweazle" hidden>
+    <div class="pane-head"><h2>Nastavení Greaseweazle</h2><span class="hint" id="set-state"></span></div>
+    <form id="set-form" class="set-grid">
+      <label for="set-gw">Cesta ke gw
+        <input type="text" id="set-gw" placeholder="C:\Greaseweazle\gw.exe" autocomplete="off" spellcheck="false">
+        <small>Soubor gw.exe, nebo složka, ve které leží. Prázdné pole: hledat automaticky.</small>
+      </label>
+      <label for="set-device">Port
+        <input type="text" id="set-device" list="set-ports" placeholder="automaticky" autocomplete="off" spellcheck="false">
+        <datalist id="set-ports"></datalist>
+        <small id="set-ports-note">Například COM5. Prázdné pole: gw si port najde sám.</small>
+      </label>
+      <label for="set-drive">Mechanika
+        <select id="set-drive">
+          <option value="">výchozí (A)</option>
+          <option value="A">A (PC kabel, za překřížením)</option>
+          <option value="B">B (PC kabel, před překřížením)</option>
+          <option value="0">0 (Shugart)</option>
+          <option value="1">1 (Shugart)</option>
+          <option value="2">2 (Shugart)</option>
+        </select>
+        <small>Stejná hodnota jako u volby --drive.</small>
+      </label>
+      <div class="set-actions">
+        <button type="submit" class="primary">Uložit nastavení</button>
+        <button type="button" id="btn-test">Otestovat spojení</button>
+      </div>
+    </form>
+    <pre id="test-out" hidden></pre>
+  </section>
+
+  <nav id="disks" aria-label="Načtené diskety"></nav>
+  <section id="summary" aria-label="Údaje o disketě"></section>
+
+  <main class="panes">
+    <section class="pane" id="list-pane" aria-label="Obsah diskety"></section>
+    <section class="pane" id="view-pane" aria-label="Obsah souboru"></section>
+  </main>
+
+  <p id="about" class="hint">Prohlížeč disket Atari ST, verze @@VERSION@@ · licence GNU GPL v2 · výpis GFA BASICu podle programu gfalist (Peter Backes a další)</p>
+
+  <details class="how">
+    <summary>Jak disketu načíst Greaseweazlem</summary>
+    <p>Běžná oboustranná disketa 720 kB: <code>gw read --format=atarist.720 disketa.msa</code>. Jednostranná: <code>atarist.360</code>. Diskety formátované na 10 nebo 11 sektorů: <code>atarist.800</code>, <code>atarist.880</code>.</p>
+    <p>Hry s ochranou proti kopírování nebo vlastním formátem souborový systém nemají. Takový obraz se tu otevře jen po sektorech.</p>
+  </details>
+</div>
+
+<script>
+'use strict';
+/* ===================== Core: byte helpers ===================== */
+const u16be = (b, o) => (b[o] << 8) | b[o + 1];
+const u16le = (b, o) => b[o] | (b[o + 1] << 8);
+const u32le = (b, o) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
+const u32be = (b, o) => ((b[o] << 24) | (b[o + 1] << 16) | (b[o + 2] << 8) | b[o + 3]) >>> 0;
+
+/* ===================== MSA container ===================== */
+function decodeMSA(b) {
+  if (b.length < 10 || u16be(b, 0) !== 0x0E0F) throw new Error('Soubor není MSA.');
+  const spt = u16be(b, 2), sides = u16be(b, 4) + 1, start = u16be(b, 6), end = u16be(b, 8);
+  if (!spt || spt > 64 || sides > 2 || end > 90 || start > end) throw new Error('Hlavička MSA obsahuje nesmyslné hodnoty.');
+  const trackLen = spt * 512;
+  const data = new Uint8Array((end + 1) * sides * trackLen);
+  const warnings = [];
+  let p = 10;
+  outer:
+  for (let t = start; t <= end; t++) {
+    for (let s = 0; s < sides; s++) {
+      if (p + 2 > b.length) { warnings.push('Soubor MSA je useknutý, chybí data od stopy ' + t + '.'); break outer; }
+      const len = u16be(b, p); p += 2;
+      const dst = (t * sides + s) * trackLen;
+      const stop = Math.min(p + len, b.length);
+      if (len === trackLen) {
+        data.set(b.subarray(p, stop), dst);
+      } else {
+        let o = dst; const oEnd = dst + trackLen; let q = p;
+        while (q < stop && o < oEnd) {
+          const c = b[q++];
+          if (c === 0xE5 && q + 3 <= stop) {
+            const v = b[q], n = u16be(b, q + 1); q += 3;
+            const e = Math.min(o + n, oEnd);
+            data.fill(v, o, e); o = e;
+          } else data[o++] = c;
+        }
+      }
+      p += len;
+    }
+  }
+  if (start > 0) warnings.push('Obraz začíná až stopou ' + start + ', předchozí stopy jsou prázdné.');
+  return { data, spt, sides, tracks: end + 1, warnings };
+}
+
+function encodeMSA(data, spt, sides, tracks) {
+  const trackLen = spt * 512, parts = [];
+  const head = new Uint8Array(10);
+  head.set([0x0E, 0x0F, spt >> 8, spt & 255, 0, sides - 1, 0, 0, (tracks - 1) >> 8, (tracks - 1) & 255]);
+  parts.push(head);
+  for (let i = 0; i < tracks * sides; i++) {
+    const tr = data.subarray(i * trackLen, (i + 1) * trackLen), out = [];
+    let k = 0;
+    while (k < tr.length) {
+      let n = 1; const c = tr[k];
+      while (k + n < tr.length && tr[k + n] === c) n++;
+      if (n > 4 || c === 0xE5) out.push(0xE5, c, n >> 8, n & 255); else for (let j = 0; j < n; j++) out.push(c);
+      k += n;
+    }
+    const body = out.length < trackLen ? Uint8Array.from(out) : tr;
+    parts.push(Uint8Array.of(body.length >> 8, body.length & 255), body);
+  }
+  return concat(parts);
+}
+
+function concat(parts) {
+  let n = 0; for (const p of parts) n += p.length;
+  const out = new Uint8Array(n); let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+
+/* ===================== Character sets ===================== */
+const ST_HIGH =
+  'ÇüéâäàåçêëèïîìÄÅ' + 'ÉæÆôöòûùÿÖÜ¢£¥ßƒ' + 'áíóúñÑªº¿⌐¬½¼¡«»' + 'ãõØøœŒÀÃÕ¨´†¶©®™' +
+  'ĳĲאבגדהוזחטיכלמנ' + 'סעפצקרשתןךםףץ§∧∞' + 'αβΓπΣσµτΦΘΩδ∮ϕ∈∩' + '≡±≥≤⌠⌡÷≈°•·√ⁿ²³¯';
+const KAM_HIGH = 'ČüéďäĎŤčěĚĹÍľĺÄÁ' + 'ÉžŽôöÓůÚýÖÜŠĽÝŘť' + 'áíóúňŇŮÔšřŕŔ¼§«»';
+function decodeText(bytes, enc) {
+  if (enc === 'cp1250' || enc === 'iso2' || enc === 'utf8') {
+    const label = enc === 'cp1250' ? 'windows-1250' : enc === 'iso2' ? 'iso-8859-2' : 'utf-8';
+    return new TextDecoder(label).decode(bytes).replace(/\r\n?/g, '\n').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g, '·');
+  }
+  const hi = enc === 'kam' ? KAM_HIGH + ST_HIGH.slice(KAM_HIGH.length) : ST_HIGH;
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) {
+    const c = bytes[i];
+    if (c === 13) { s += '\n'; if (bytes[i + 1] === 10) i++; }
+    else if (c === 10 || c === 9) s += String.fromCharCode(c);
+    else if (c < 32) s += '·';
+    else if (c < 127) s += String.fromCharCode(c);
+    else if (c === 127) s += '·';
+    else s += hi[c - 128];
+  }
+  return s;
+}
+function looksLikeText(bytes) {
+  const n = Math.min(bytes.length, 2048); if (!n) return false;
+  let bad = 0;
+  for (let i = 0; i < n; i++) { const c = bytes[i]; if (c === 0) return false; if (c < 32 && c !== 9 && c !== 10 && c !== 13 && c !== 27) bad++; }
+  return bad / n < 0.05;
+}
+
+/* ===================== Disk image + FAT12 ===================== */
+function openImage(name, bytes) {
+  const disk = { name, fileSize: bytes.length, warnings: [], geo: null, fs: null };
+  if (bytes.length >= 10 && u16be(bytes, 0) === 0x0E0F) {
+    const m = decodeMSA(bytes);
+    disk.container = 'MSA'; disk.data = m.data;
+    disk.geo = { spt: m.spt, sides: m.sides, tracks: m.tracks };
+    disk.warnings.push(...m.warnings);
+  } else {
+    disk.container = 'ST'; disk.data = bytes;
+    if (bytes.length < 512) throw new Error('Soubor je příliš malý na obraz diskety.');
+    if (bytes.length % 512) disk.warnings.push('Velikost souboru není násobkem 512 bajtů.');
+  }
+  parseFS(disk);
+  if (!disk.geo) disk.geo = guessGeometry(disk);
+  return disk;
+}
+
+function guessGeometry(disk) {
+  const d = disk.data, total = Math.floor(d.length / 512);
+  const spt = u16le(d, 24), sides = u16le(d, 26);
+  if (spt >= 8 && spt <= 40 && (sides === 1 || sides === 2) && total % (spt * sides) === 0) {
+    const tracks = total / (spt * sides);
+    if (tracks >= 35 && tracks <= 90) return { spt, sides, tracks };
+  }
+  for (const sd of [2, 1]) for (const sp of [9, 10, 11, 18, 36]) for (let tr = 78; tr <= 86; tr++) {
+    if (sd * sp * tr === total) return { spt: sp, sides: sd, tracks: tr };
+  }
+  return null;
+}
+
+function bpbLayout(d) {
+  const bps = u16le(d, 11), spc = d[13], nd = u16le(d, 17), spf = u16le(d, 22);
+  let res = u16le(d, 14), nf = d[16];
+  if (bps !== 512 || !spc || (spc & (spc - 1)) || !spf || spf > 64 || !nd || nd > 1024) return null;
+  if (res < 1 || res > 16) res = 1;
+  if (nf < 1 || nf > 4) nf = 2;
+  return { spc, spt: u16le(d, 24), sides: u16le(d, 26), ns: u16le(d, 19), dataStart: res + nf * spf + Math.ceil(nd * 32 / 512) };
+}
+
+function parseFS(disk) {
+  const d = disk.data;
+  disk.fs = null;
+  let sum = 0; for (let i = 0; i < 512; i += 2) sum = (sum + u16be(d, i)) & 0xFFFF;
+  disk.bootable = sum === 0x1234;
+  disk.serial = [d[8], d[9], d[10]].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  const bps = u16le(d, 11), spc = d[13], nd = u16le(d, 17), spf = u16le(d, 22);
+  let res = u16le(d, 14), nf = d[16], ns = u16le(d, 19);
+  if (bps !== 512 || !spc || (spc & (spc - 1)) || !spf || spf > 64 || !nd || nd > 1024) return;
+  if (res < 1 || res > 16) res = 1;
+  if (nf < 1 || nf > 4) nf = 2;
+  const total = Math.floor(d.length / 512);
+  if (!ns) ns = total;
+  if (ns > total) { disk.warnings.push('Boot sektor udává ' + ns + ' sektorů, obraz jich má jen ' + total + '.'); ns = total; }
+  const rootStart = res + nf * spf, rootSects = Math.ceil(nd * 32 / 512), dataStart = rootStart + rootSects;
+  if (dataStart >= ns) return;
+  const ncl = Math.floor((ns - dataStart) / spc);
+  if (ncl >= 4085) return; // not FAT12
+  const fatOff = res * 512;
+  const fs = { spc, res, nf, nd, ns, spf, rootStart, dataStart, ncl, clusterBytes: spc * 512, label: '' };
+  fs.fat = n => { const o = fatOff + ((n * 3) >> 1); const v = u16le(d, o); return (n & 1) ? v >> 4 : v & 0xFFF; };
+  fs.clusterOff = c => (dataStart + (c - 2) * spc) * 512;
+  fs.chain = start => {
+    const out = [], seen = new Set(); let c = start;
+    while (c >= 2 && c < ncl + 2 && !seen.has(c)) { out.push(c); seen.add(c); c = fs.fat(c); }
+    return out;
+  };
+  const seenDirs = new Set();
+  let fileCount = 0, usedBytes = 0;
+  function readDir(buf, path, depth) {
+    const list = [];
+    for (let o = 0; o + 32 <= buf.length; o += 32) {
+      const first = buf[o];
+      if (first === 0) break;
+      const attr = buf[o + 11];
+      if ((attr & 0x0F) === 0x0F) continue; // long-name entry
+      const deleted = first === 0xE5;
+      const nm = dosName(buf, o, deleted);
+      if (nm === '.' || nm === '..') continue;
+      if (attr & 0x08) { if (!deleted && !fs.label) fs.label = decodeText(buf.subarray(o, o + 11), 'st').trim(); continue; }
+      const e = {
+        name: nm, path: path + nm, attr, deleted, isDir: !!(attr & 0x10),
+        time: u16le(buf, o + 22), date: u16le(buf, o + 24), cluster: u16le(buf, o + 26), size: u32le(buf, o + 28),
+        children: null, depth
+      };
+      if (!/^[\x20-\x7e\u0080-￿]+$/.test(nm)) continue;
+      if (e.isDir && !deleted && e.cluster >= 2 && !seenDirs.has(e.cluster) && depth < 16) {
+        seenDirs.add(e.cluster);
+        const parts = fs.chain(e.cluster).map(c => d.subarray(fs.clusterOff(c), fs.clusterOff(c) + fs.clusterBytes));
+        e.children = readDir(concat(parts), e.path + '/', depth + 1);
+      } else if (e.isDir) e.children = [];
+      if (!e.isDir && !deleted) { fileCount++; usedBytes += e.size; }
+      list.push(e);
+    }
+    return list;
+  }
+  fs.root = readDir(d.subarray(rootStart * 512, dataStart * 512), '', 0);
+  let free = 0; for (let c = 2; c < ncl + 2; c++) if (fs.fat(c) === 0) free++;
+  fs.freeBytes = free * fs.clusterBytes; fs.fileCount = fileCount; fs.usedBytes = usedBytes;
+  disk.fs = fs;
+}
+
+function dosName(buf, o, deleted) {
+  const part = (a, n) => { let s = ''; for (let i = 0; i < n; i++) { const c = buf[o + a + i]; s += c < 32 ? '?' : c < 127 ? String.fromCharCode(c) : c === 127 ? '?' : ST_HIGH[c - 128]; } return s.replace(/ +$/, ''); };
+  let base = part(0, 8); const ext = part(8, 3);
+  if (deleted) base = '?' + base.slice(1);
+  return ext ? base + '.' + ext : base;
+}
+
+function fileClusters(disk, e) {
+  const fs = disk.fs, need = Math.ceil(e.size / fs.clusterBytes); let clusters;
+  if (e.deleted) {
+    clusters = [];
+    for (let c = e.cluster, i = 0; i < need && c >= 2 && c < fs.ncl + 2; i++, c++) clusters.push(c);
+  } else clusters = fs.chain(e.cluster);
+  return clusters.slice(0, need);
+}
+/* Tracks (index = cylinder * sides + head) that hold the given clusters. */
+function clusterTracks(disk, clusters) {
+  const fs = disk.fs, spt = disk.geo.spt, out = new Set();
+  for (const c of clusters) { const s = fs.dataStart + (c - 2) * fs.spc; for (let i = 0; i < fs.spc; i++) out.add(Math.floor((s + i) / spt)); }
+  return [...out];
+}
+function dirTracks(disk) {
+  const out = new Set();
+  (function walk(list) { for (const e of list) if (e.isDir && !e.deleted && e.cluster >= 2) { for (const t of clusterTracks(disk, disk.fs.chain(e.cluster))) out.add(t); walk(e.children || []); } })(disk.fs.root);
+  return [...out];
+}
+function allFileTracks(disk) {
+  const out = new Set();
+  (function walk(list) { for (const e of list) { if (e.deleted) continue; if (e.isDir) walk(e.children || []); else for (const t of clusterTracks(disk, fileClusters(disk, e))) out.add(t); } })(disk.fs.root);
+  return [...out];
+}
+
+function fileData(disk, e) {
+  const fs = disk.fs, d = disk.data, clusters = fileClusters(disk, e);
+  const need = Math.ceil(e.size / fs.clusterBytes);
+  const out = new Uint8Array(e.size); let o = 0;
+  for (const c of clusters.slice(0, need)) {
+    const off = fs.clusterOff(c), n = Math.min(fs.clusterBytes, e.size - o);
+    if (off + n > d.length) break;
+    out.set(d.subarray(off, off + n), o); o += n;
+  }
+  return { bytes: out, complete: o === e.size };
+}
+
+function dosDate(date, time) {
+  if (!date) return '';
+  const p = (n) => String(n).padStart(2, '0');
+  const day = date & 31, mon = (date >> 5) & 15, yr = 1980 + (date >> 9);
+  if (!day || !mon || mon > 12) return '';
+  return day + '.' + mon + '.' + yr + ' ' + p(time >> 11) + ':' + p((time >> 5) & 63);
+}
+
+/* ===================== Pictures (Degas, NEOchrome, Doodle) ===================== */
+function stPalette(words) {
+  const ste = words.some(w => w & 0x888);
+  return words.map(w => [8, 4, 0].map(s => { const n = (w >> s) & 15; return ste ? (((n & 7) << 1) | (n >> 3)) * 17 : Math.round((n & 7) * 255 / 7); }));
+}
+function planarToRGBA(data, off, res, palWords) {
+  const [w, h, pl] = res === 0 ? [320, 200, 4] : res === 1 ? [640, 200, 2] : [640, 400, 1];
+  if (off + 32000 > data.length) return null;
+  const pal = stPalette(palWords), rgba = new Uint8ClampedArray(w * h * 4);
+  const monoWhiteIs0 = !!(palWords[0] & 1);
+  let p = off, q = 0;
+  for (let i = 0; i < 32000 / (pl * 2); i++) {
+    const wd = []; for (let k = 0; k < pl; k++) { wd.push(u16be(data, p)); p += 2; }
+    for (let bit = 15; bit >= 0; bit--) {
+      let idx = 0; for (let k = 0; k < pl; k++) idx |= ((wd[k] >> bit) & 1) << k;
+      let c;
+      if (res === 2) { const v = (idx === 0) === monoWhiteIs0 ? 255 : 0; c = [v, v, v]; } else c = pal[idx];
+      rgba[q++] = c[0]; rgba[q++] = c[1]; rgba[q++] = c[2]; rgba[q++] = 255;
+    }
+  }
+  return { w, h, rgba };
+}
+function unpackBits(src, off, want) {
+  const out = new Uint8Array(want); let o = 0, p = off;
+  while (o < want && p < src.length) {
+    const n = src[p++];
+    if (n < 128) { for (let i = 0; i <= n && o < want && p < src.length; i++) out[o++] = src[p++]; }
+    else if (n > 128) { const v = src[p++]; for (let i = 0; i < 257 - n && o < want; i++) out[o++] = v; }
+  }
+  return out;
+}
+const RES_NAME = ['nízké rozlišení 320×200, 16 barev', 'střední rozlišení 640×200, 4 barvy', 'vysoké rozlišení 640×400, černobílé'];
+function decodeImage(name, b) {
+  const ext = (name.split('.').pop() || '').toUpperCase();
+  let img = null, kind = '';
+  if (/^P[IC][123]$/.test(ext) && b.length >= 34) {
+    const head = u16be(b, 0), res = head & 3, packed = !!(head & 0x8000);
+    if (res > 2) return null;
+    const pal = []; for (let i = 0; i < 16; i++) pal.push(u16be(b, 2 + i * 2));
+    if (packed) {
+      const raw = unpackBits(b, 34, 32000), pl = [4, 2, 1][res], bpl = res === 0 ? 40 : 80, lines = res === 2 ? 400 : 200;
+      const il = new Uint8Array(32000), lineBytes = pl * bpl;
+      for (let y = 0; y < lines; y++) for (let k = 0; k < pl; k++) for (let wI = 0; wI < bpl / 2; wI++) {
+        const s = y * lineBytes + k * bpl + wI * 2, t = y * lineBytes + (wI * pl + k) * 2;
+        il[t] = raw[s]; il[t + 1] = raw[s + 1];
+      }
+      img = planarToRGBA(il, 0, res, pal);
+    } else img = planarToRGBA(b, 34, res, pal);
+    if (img) kind = 'Degas' + (packed ? ' (komprimovaný)' : '') + ', ' + RES_NAME[res];
+  } else if (ext === 'NEO' && b.length >= 32128) {
+    const res = u16be(b, 2); if (res > 2) return null;
+    const pal = []; for (let i = 0; i < 16; i++) pal.push(u16be(b, 4 + i * 2));
+    img = planarToRGBA(b, 128, res, pal);
+    if (img) kind = 'NEOchrome, ' + RES_NAME[res];
+  } else if (ext === 'DOO' && b.length === 32000) {
+    img = planarToRGBA(b, 0, 2, [0x777]);
+    kind = 'Doodle, ' + RES_NAME[2];
+  }
+  if (!img) return null;
+  img.kind = kind; return img;
+}
+
+function prgInfo(b) {
+  if (b.length < 28 || u16be(b, 0) !== 0x601A) return '';
+  return 'program TOS: kód ' + u32be(b, 2) + ' B, data ' + u32be(b, 6) + ' B, BSS ' + u32be(b, 10) + ' B';
+}
+
+/*@@GFA_MODULE@@*/
+/* ===================== Hex dump ===================== */
+function hexDump(bytes, start, len) {
+  const end = Math.min(bytes.length, start + len), lines = [];
+  for (let o = start; o < end; o += 16) {
+    let hex = '', asc = '';
+    for (let i = 0; i < 16; i++) {
+      if (o + i < end) { const c = bytes[o + i]; hex += c.toString(16).padStart(2, '0') + ' '; asc += c >= 32 && c < 127 ? String.fromCharCode(c) : '.'; }
+      else hex += '   ';
+      if (i === 7) hex += ' ';
+    }
+    lines.push(o.toString(16).padStart(6, '0') + '  ' + hex + ' ' + asc);
+  }
+  return lines.join('\n');
+}
+
+/* ===================== ZIP (stored, no compression) ===================== */
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let off = 0;
+  const w16 = (a, o, v) => { a[o] = v & 255; a[o + 1] = (v >> 8) & 255; };
+  const w32 = (a, o, v) => { w16(a, o, v & 0xFFFF); w16(a, o + 2, (v >>> 16) & 0xFFFF); };
+  for (const f of files) {
+    const nm = enc.encode(f.path), crc = crc32(f.data), date = f.date || 0x21, time = f.time || 0;
+    const lh = new Uint8Array(30 + nm.length);
+    w32(lh, 0, 0x04034b50); w16(lh, 4, 20); w16(lh, 6, 0x800); w16(lh, 8, 0); w16(lh, 10, time); w16(lh, 12, date);
+    w32(lh, 14, crc); w32(lh, 18, f.data.length); w32(lh, 22, f.data.length); w16(lh, 26, nm.length); lh.set(nm, 30);
+    const ch = new Uint8Array(46 + nm.length);
+    w32(ch, 0, 0x02014b50); w16(ch, 4, 20); w16(ch, 6, 20); w16(ch, 8, 0x800); w16(ch, 12, time); w16(ch, 14, date);
+    w32(ch, 16, crc); w32(ch, 20, f.data.length); w32(ch, 24, f.data.length); w16(ch, 28, nm.length); w32(ch, 42, off); ch.set(nm, 46);
+    parts.push(lh, f.data); central.push(ch); off += lh.length + f.data.length;
+  }
+  let csize = 0; for (const c of central) csize += c.length;
+  const end = new Uint8Array(22);
+  w32(end, 0, 0x06054b50); w16(end, 8, files.length); w16(end, 10, files.length); w32(end, 12, csize); w32(end, 16, off);
+  return concat([...parts, ...central, end]);
+}
+function allFiles(disk) {
+  const out = [];
+  (function walk(list) { for (const e of list) { if (e.deleted) continue; if (e.isDir) walk(e.children || []); else out.push({ path: e.path, data: fileData(disk, e).bytes, date: e.date, time: e.time }); } })(disk.fs.root);
+  return out;
+}
+
+/* ===================== Demo disk (built in memory, packed as MSA) ===================== */
+function buildDemoMSA() {
+  const d = new Uint8Array(1440 * 512), spc = 2, spf = 5, nd = 112, fatOff = 512, rootOff = (1 + 2 * spf) * 512, dataStart = 1 + 2 * spf + 7;
+  const w16 = (o, v) => { d[o] = v & 255; d[o + 1] = v >> 8; };
+  d.set([0x60, 0x38]); d.set([0x4C, 0x6F, 0x61, 0x64, 0x65, 0x72], 2); d.set([0x19, 0x75, 0x02], 8);
+  w16(11, 512); d[13] = spc; w16(14, 1); d[16] = 2; w16(17, nd); w16(19, 1440); d[21] = 0xF9; w16(22, spf); w16(24, 9); w16(26, 2);
+  const setFat = (n, v) => { const o = fatOff + ((n * 3) >> 1); if (n & 1) { d[o] = (d[o] & 0x0F) | ((v << 4) & 0xF0); d[o + 1] = v >> 4; } else { d[o] = v & 255; d[o + 1] = (d[o + 1] & 0xF0) | (v >> 8); } };
+  setFat(0, 0xFF9); setFat(1, 0xFFF);
+  let next = 2; const date = ((2026 - 1980) << 9) | (11 << 5) | 16, time = (4 << 11) | (52 << 5);
+  const store = bytes => { const n = Math.max(1, Math.ceil(bytes.length / 1024)), first = next; d.set(bytes, (dataStart + (first - 2) * spc) * 512); for (let i = 0; i < n; i++) setFat(first + i, i === n - 1 ? 0xFFF : first + i + 1); next += n; return first; };
+  const entry = (buf, o, name, ext, attr, cl, size) => { const s = (name.padEnd(8) + ext.padEnd(3)); for (let i = 0; i < 11; i++) buf[o + i] = s.charCodeAt(i); buf[o + 11] = attr; buf[o + 22] = time & 255; buf[o + 23] = time >> 8; buf[o + 24] = date & 255; buf[o + 25] = date >> 8; buf[o + 26] = cl & 255; buf[o + 27] = cl >> 8; buf[o + 28] = size & 255; buf[o + 29] = (size >> 8) & 255; buf[o + 30] = (size >> 16) & 255; };
+  const ascii = s => Uint8Array.from(s, c => c.charCodeAt(0));
+  const txt = ascii('UKAZKOVA DISKETA\r\n================\r\n\r\nTento obraz diskety vznikl primo v prohlizeci, aby bylo videt,\r\njak nastroj funguje. Otevrete vlastni soubory .MSA nebo .ST\r\na ukazka zmizi.\r\n\r\nVlevo je adresar diskety, vpravo obsah vybraneho souboru\r\njako text, hex vypis nebo obrazek.\r\n');
+  const pic = new Uint8Array(32034); const pal = [0x000, 0x003, 0x005, 0x007, 0x027, 0x047, 0x067, 0x077, 0x076, 0x074, 0x072, 0x070, 0x370, 0x570, 0x770, 0x777];
+  pal.forEach((v, i) => { pic[2 + i * 2] = v >> 8; pic[3 + i * 2] = v & 255; });
+  for (let y = 0; y < 200; y++) for (let x = 0; x < 320; x++) {
+    const idx = (Math.floor(Math.hypot(x - 160, (y - 100) * 1.2) / 9) + (x >> 5)) & 15, o = 34 + y * 160 + (x >> 4) * 8, bit = 15 - (x & 15);
+    for (let k = 0; k < 4; k++) if ((idx >> k) & 1) { if (bit >= 8) pic[o + k * 2] |= 1 << (bit - 8); else pic[o + k * 2 + 1] |= 1 << bit; }
+  }
+  const prg = new Uint8Array(64); prg.set([0x60, 0x1A, 0, 0, 0, 0x20, 0, 0, 0, 4, 0, 0, 0, 0x10]); prg.set([0x4E, 0x75], 28);
+  entry(d, rootOff, 'UKAZKA', '', 0x08, 0, 0);
+  entry(d, rootOff + 32, 'CTIMNE', 'TXT', 0x20, store(txt), txt.length);
+  entry(d, rootOff + 64, 'OBRAZEK', 'PI1', 0x20, store(pic), pic.length);
+  const dir = new Uint8Array(1024), dirCl = next; next++; setFat(dirCl, 0xFFF);
+  entry(dir, 0, '.', '', 0x10, dirCl, 0); entry(dir, 32, '..', '', 0x10, 0, 0);
+  entry(dir, 64, 'START', 'PRG', 0x20, store(prg), prg.length);
+  d.set(dir, (dataStart + (dirCl - 2) * spc) * 512);
+  entry(d, rootOff + 96, 'AUTO', '', 0x10, dirCl, 0);
+  d.copyWithin(fatOff + spf * 512, fatOff, fatOff + spf * 512);
+  return encodeMSA(d, 9, 2, 80);
+}
+
+/* ===================== UI ===================== */
+if (typeof document !== 'undefined') (function () {
+  const $ = id => document.getElementById(id);
+  const el = (tag, props, ...kids) => { const n = document.createElement(tag); if (props) for (const k in props) { if (k === 'class') n.className = props[k]; else if (k.startsWith('on')) n.addEventListener(k.slice(2), props[k]); else if (k in n && k !== 'list') n[k] = props[k]; else n.setAttribute(k, props[k]); } for (const c of kids) if (c != null) n.append(c); return n; };
+  const fmtSize = n => n.toLocaleString('cs-CZ');
+  const fmtKB = n => (n / 1024).toLocaleString('cs-CZ', { maximumFractionDigits: 1 }) + ' kB';
+  const DIRECT_EXT = new Set(['png', 'txt', 'zip', 'json', 'md', 'csv', 'html', 'svg', 'pdf']);
+
+  const state = { disks: [], cur: -1, sel: null, mode: 'text', enc: 'st', page: 0, showDeleted: false, collapsed: new Set(), cache: null };
+  let downloads = null;
+  if (window.claude && typeof window.claude.use === 'function') window.claude.use('downloads').then(d => { downloads = d; }).catch(() => {});
+
+  const say = (msg, err) => { const st = $('status'); st.textContent = msg; st.classList.toggle('err', !!err); };
+  const sayErr = msg => say(msg, true);
+
+  async function saveOut(filename, bytes) {
+    const ext = (filename.split('.').pop() || '').toLowerCase();
+    if (downloads) {
+      let fn = filename, data = bytes;
+      if (!DIRECT_EXT.has(ext)) { data = makeZip([{ path: filename, data: bytes }]); fn = filename + '.zip'; }
+      try { await downloads.save({ filename: fn, data }); say('Uloženo: ' + fn); }
+      catch (e) { say(e && e.code === 'declined' ? 'Uložení zrušeno.' : 'Soubor se nepodařilo uložit (' + ((e && e.code) || 'chyba') + ').'); }
+      return;
+    }
+    try {
+      const url = URL.createObjectURL(new Blob([bytes]));
+      const a = el('a', { href: url, download: filename }); document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      say('Stahuje se: ' + filename);
+    } catch (e) { say('Stahování v tomto zobrazení není dostupné.'); }
+  }
+
+  const disk = () => state.disks[state.cur] || null;
+
+  function addDisk(name, bytes, demo) {
+    try { const d = openImage(name, bytes); d.demo = !!demo; state.disks.push(d); return true; }
+    catch (e) { say(name + ': ' + e.message); return false; }
+  }
+  /* ---------- Live reading through the local helper (st_disketa.py) ---------- */
+  const FORMATS = { 'atarist.360': [1, 9], 'atarist.400': [1, 10], 'atarist.440': [1, 11], 'atarist.720': [2, 9], 'atarist.800': [2, 10], 'atarist.880': [2, 11] };
+  let busy = false, liveCount = 0;
+
+  async function gwRead(format, cyls, heads, retries) {
+    let res;
+    try {
+      const r = await fetch('/api/read', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ format, cyls, heads, retries }) });
+      res = await r.json();
+    } catch (e) { throw new Error('Pomocný program neodpovídá. Běží ještě st_disketa.py?'); }
+    if (!res.ok) { const e = new Error(res.error || 'Čtení selhalo.'); e.detail = res.detail || ''; throw e; }
+    for (const t of res.tracks) { const s = atob(t.data), b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); t.bytes = b; }
+    return res;
+  }
+  function storeTrack(d, t) {
+    const idx = t.c * d.geo.sides + t.h;
+    d.data.set(t.bytes, idx * d.geo.spt * 512); d.have[idx] = 1;
+    if (t.good < t.total) d.bad.set(idx, t.c + '.' + t.h + ' (' + t.good + '/' + t.total + ')'); else d.bad.delete(idx);
+  }
+  async function readTracks(d, list) {
+    const sides = d.geo.sides;
+    const need = [...new Set(list)].filter(t => t >= 0 && t < d.have.length && !d.have[t]);
+    const cyls = [...new Set(need.map(t => Math.floor(t / sides)))].sort((a, b) => a - b);
+    for (let i = 0; i < cyls.length; i += 6) {
+      const chunk = cyls.slice(i, i + 6);
+      say('Čtu z diskety: stopa ' + chunk[0] + (cyls.length > 1 ? ' (' + (i + 1) + ' z ' + cyls.length + ')' : '') + ' …');
+      const res = await gwRead(d.fmt, chunk, sides === 2 ? [0, 1] : [0], 3);
+      for (const t of res.tracks) storeTrack(d, t);
+      if (disk() === d) renderSummary();
+    }
+  }
+  /* Makes sure the given tracks are in memory. Returns false (with a message) if they cannot be read. */
+  async function ensure(d, tracks) {
+    if (!d.have) return true;
+    const miss = tracks.filter(t => t < d.have.length && !d.have[t]);
+    if (!miss.length) return true;
+    if (!d.live) { sayErr('Tato část diskety nebyla načtena a disketa už není v mechanice.'); return false; }
+    if (busy) { say('Počkejte, disketa se právě čte.'); return false; }
+    busy = true;
+    try { await readTracks(d, miss); say('Načteno.'); return true; }
+    catch (e) { sayErr(e.message + (e.detail ? ' (' + e.detail + ')' : '')); return false; }
+    finally { busy = false; if (disk() === d) renderSummary(); }
+  }
+  async function insertDisk() {
+    if (busy) { say('Počkejte, disketa se právě čte.'); return; }
+    busy = true; $('btn-insert').disabled = true;
+    for (const x of state.disks) x.live = false;
+    renderDisks();
+    try {
+      let fmt = $('fmt').value, probe = null, probeFmt = '', warn = '';
+      if (fmt === 'auto') {
+        say('Čtu boot sektor …');
+        probeFmt = 'atarist.720'; probe = await gwRead(probeFmt, [0], [0], 1);
+        if (!probe.tracks[0].good) {
+          probeFmt = 'atarist.880'; probe = await gwRead(probeFmt, [0], [0], 1);
+          if (!probe.tracks[0].good) { say('První stopa nejde přečíst, zkouším to znovu důkladněji …'); probeFmt = 'atarist.720'; probe = await gwRead(probeFmt, [0], [0], 5); }
+          if (!probe.tracks[0].good) throw new Error('Na první stopě diskety se nepodařilo přečíst žádný sektor.');
+        }
+        const L = bpbLayout(probe.tracks[0].bytes);
+        fmt = L ? Object.keys(FORMATS).find(k => FORMATS[k][0] === L.sides && FORMATS[k][1] === L.spt) : null;
+        if (!fmt) { fmt = 'atarist.720'; warn = 'Boot sektor nepopisuje formát diskety, předpokládám 720 kB. Jiný formát zvolte ručně a načtěte znovu.'; }
+      }
+      const [sides, spt] = FORMATS[fmt];
+      const d = { name: 'Disketa', live: true, fmt, container: 'mechanika, ' + fmt, geo: { spt, sides, tracks: 80 }, fileSize: 0,
+        data: new Uint8Array(80 * sides * spt * 512), have: new Uint8Array(80 * sides), bad: new Map(), baseWarnings: warn ? [warn] : [], warnings: [], fs: null };
+      if (probe && probeFmt === fmt) storeTrack(d, probe.tracks[0]);
+      say('Čtu adresář …');
+      await readTracks(d, [0]);
+      const L = bpbLayout(d.data);
+      if (L) { const last = Math.floor((Math.min(L.dataStart, 80 * sides * spt) - 1) / spt), sys = []; for (let t = 0; t <= last; t++) sys.push(t); await readTracks(d, sys); }
+      for (let pass = 0; pass < 20; pass++) {
+        d.warnings = [...d.baseWarnings]; parseFS(d);
+        if (!d.fs) break;
+        const miss = dirTracks(d).filter(t => t < d.have.length && !d.have[t]);
+        if (!miss.length) break;
+        await readTracks(d, miss);
+      }
+      liveCount++;
+      d.name = (d.fs && d.fs.label) || 'Disketa ' + liveCount;
+      d.saveName = ((d.fs && d.fs.label) || 'disketa' + liveCount).replace(/[^\w\-]/g, '_').toLowerCase();
+      state.disks = state.disks.filter(x => !x.demo && !x.failed); state.disks.push(d);
+      selectDisk(state.disks.length - 1);
+      say(d.fs ? 'Adresář načten. Soubor se z diskety přečte, až na něj kliknete.' : 'Disketa načtena, adresář na ní není.');
+    } catch (e) {
+      state.disks = state.disks.filter(x => !x.demo && !x.failed);
+      state.disks.push({ name: 'Nečitelná disketa', failed: true, error: e.message, log: e.detail || '', warnings: [], data: new Uint8Array(0), fs: null, geo: null });
+      state.cur = state.disks.length - 1; state.sel = null; state.cache = null;
+      render();
+      sayErr('Disketu se nepodařilo načíst: ' + e.message);
+    }
+    finally { busy = false; $('btn-insert').disabled = false; }
+  }
+  async function pick(sel) {
+    const d = disk(); state.sel = sel; state.cache = null; state.page = 0;
+    renderList();
+    if (d && d.have && sel.kind === 'file') {
+      const need = clusterTracks(d, fileClusters(d, sel.entry)).filter(t => t < d.have.length && !d.have[t]);
+      if (need.length) {
+        if (!d.live) { renderView('Soubor nebyl načten a disketa už není v mechanice.'); return; }
+        if (busy) { say('Počkejte, disketa se právě čte.'); renderView('Disketa se právě čte, zkuste to za chvíli.'); return; }
+        renderView('Čtu soubor z diskety …');
+        const ok = await ensure(d, need);
+        if (state.sel !== sel || disk() !== d) return;
+        if (!ok) { renderView('Soubor se nepodařilo načíst.'); return; }
+      }
+    }
+    prepareSel(); renderView();
+  }
+
+  function selectDisk(i) {
+    state.cur = i; state.collapsed = new Set(); state.cache = null;
+    const d = disk();
+    if (!d) { state.sel = null; }
+    else if (d.failed) { state.sel = null; }
+    else if (d.have) { state.sel = d.fs ? null : { kind: 'disk' }; }
+    else if (d.fs) { const first = d.fs.root.find(e => !e.isDir && !e.deleted); state.sel = first ? { kind: 'file', entry: first } : { kind: 'disk' }; }
+    else state.sel = { kind: 'disk' };
+    prepareSel(); render();
+  }
+  function prepareSel() {
+    state.page = 0; state.cache = null;
+    const d = disk(), s = state.sel; if (!d || !s) return;
+    if (s.kind === 'disk') { state.mode = 'hex'; state.cache = { bytes: d.data, complete: true, img: null }; return; }
+    const r = fileData(d, s.entry);
+    const img = decodeImage(s.entry.name, r.bytes);
+    const gfa = gfaDetect(r.bytes);
+    let listing = null;
+    if (gfa && gfa.ok) { try { listing = gfaList(r.bytes); } catch (e) { listing = { error: 'Výpis se nepodařilo sestavit.' }; } if (listing.error) listing = null; }
+    state.cache = { bytes: r.bytes, complete: r.complete, img, gfa, listing };
+    state.mode = img ? 'img' : listing ? 'gfa' : looksLikeText(r.bytes) ? 'text' : 'hex';
+  }
+
+  async function loadFiles(fileList) {
+    const files = [...fileList]; if (!files.length) return;
+    say('');
+    const before = state.disks.filter(d => !d.demo);
+    state.disks = before; let ok = 0;
+    for (const f of files) { const buf = new Uint8Array(await f.arrayBuffer()); if (addDisk(f.name, buf, false)) ok++; }
+    if (!state.disks.length) { addDisk('UKAZKA.MSA', buildDemoMSA(), true); selectDisk(0); return; }
+    selectDisk(ok ? state.disks.length - ok : Math.min(Math.max(state.cur, 0), state.disks.length - 1));
+    if (ok) say(ok === 1 ? 'Načtena 1 disketa.' : 'Načteno disket: ' + ok + '.');
+  }
+
+  function render() { renderDisks(); renderSummary(); renderList(); renderView(); }
+
+  function renderDisks() {
+    const nav = $('disks'); nav.replaceChildren();
+    state.disks.forEach((d, i) => {
+      const tab = el('span', { class: 'disk-tab' + (i === state.cur ? ' on' : '') },
+        el('button', { type: 'button', onclick: () => selectDisk(i) }, d.name, d.demo ? el('span', { class: 'tag' }, 'ukázka') : d.failed ? el('span', { class: 'tag' }, 'chyba čtení') : d.have ? el('span', { class: 'tag' }, d.live ? 'v mechanice' : 'vyjmuta') : null),
+        d.demo ? null : el('button', { type: 'button', class: 'x', title: 'Zavřít ' + d.name, 'aria-label': 'Zavřít ' + d.name, onclick: () => {
+          state.disks.splice(i, 1);
+          if (!state.disks.length) addDisk('UKAZKA.MSA', buildDemoMSA(), true);
+          selectDisk(Math.min(i, state.disks.length - 1));
+        } }, '×'));
+      nav.append(tab);
+    });
+  }
+
+  function renderSummary() {
+    const box = $('summary'), d = disk(); box.replaceChildren(); if (!d) return;
+    if (d.failed) {
+      box.append(el('div', { class: 'failbox' },
+        el('p', { class: 'why' }, d.error),
+        el('p', null, 'Předchozí diskety zůstaly ve vedlejších záložkách. Možné příčiny: disketa je poškozená nebo neformátovaná, je v jiném formátu než Atari ST a PC, případně je špatně zasunutá. Zkuste ji načíst znovu, nebo vlevo nahoře zvolit formát ručně.'),
+        d.log ? el('p', { class: 'log' }, 'Výpis gw: ' + d.log) : null,
+        el('div', { class: 'actions' }, el('button', { type: 'button', class: 'primary', onclick: insertDisk }, 'Zkusit načíst znovu'))));
+      return;
+    }
+    const fact = (k, v) => el('div', null, el('dt', null, k), el('dd', null, v));
+    const g = d.geo, facts = el('dl', { class: 'facts' });
+    facts.append(fact('Formát', d.container + ', ' + fmtKB(d.data.length)));
+    if (g) facts.append(fact('Geometrie', g.tracks + ' stop × ' + g.sides + (g.sides === 1 ? ' strana × ' : ' strany × ') + g.spt + ' sektorů'));
+    if (d.fs) {
+      if (d.fs.label) facts.append(fact('Jmenovka', d.fs.label));
+      facts.append(fact('Souborů', String(d.fs.fileCount)), fact('Obsazeno', fmtKB(d.fs.usedBytes)), fact('Volné', fmtKB(d.fs.freeBytes)));
+    }
+    facts.append(fact('Boot sektor', d.bootable ? 'spustitelný' : 'nespustitelný'));
+    box.append(facts);
+    if (d.have) { let n = 0; for (const x of d.have) n += x; facts.append(fact('Načteno stop', n + ' z ' + d.have.length)); }
+    const pills = [...d.warnings]; if (!d.fs) pills.push('Souborový systém TOS/FAT nenalezen');
+    if (d.bad && d.bad.size) pills.push('Nečitelné sektory na stopách: ' + [...d.bad.values()].join(', '));
+    if (pills.length) box.append(el('div', { class: 'pills' }, ...pills.map(p => el('span', { class: 'pill' }, p))));
+    const acts = el('div', { class: 'actions' });
+    const base = () => d.have ? (d.saveName || 'disketa') : d.name.replace(/\.[^.]*$/, '');
+    const all = () => { const a = []; for (let t = 0; t < d.have.length; t++) a.push(t); return a; };
+    if (d.have) acts.append(el('label', { class: 'pager', htmlFor: 'save-name' }, 'Název pro uložení', el('input', { type: 'text', id: 'save-name', value: d.saveName || '', oninput: ev => { d.saveName = ev.target.value.trim(); } })));
+    if (d.fs && d.fs.fileCount) acts.append(el('button', { type: 'button', onclick: async () => { if (await ensure(d, d.have ? allFileTracks(d) : [])) saveOut(base() + '.zip', makeZip(allFiles(d))); } }, 'Stáhnout všechny soubory jako ZIP'));
+    if (d.have) {
+      acts.append(el('button', { type: 'button', onclick: async () => { if (await ensure(d, all())) saveOut(base() + '.msa', encodeMSA(d.data, d.geo.spt, d.geo.sides, d.geo.tracks)); } }, 'Načíst celou disketu a uložit .MSA'));
+      acts.append(el('button', { type: 'button', onclick: async () => { if (await ensure(d, all())) saveOut(base() + '.st', d.data); } }, 'Načíst celou disketu a uložit .ST'));
+    } else if (d.container === 'MSA') acts.append(el('button', { type: 'button', onclick: () => saveOut(base() + '.st', d.data) }, 'Uložit jako obraz .ST'));
+    box.append(acts);
+  }
+
+  function renderList() {
+    const pane = $('list-pane'), d = disk(); pane.replaceChildren(); if (!d) return;
+    if (d.failed) { pane.append(el('div', { class: 'pane-head' }, el('h2', null, 'Obsah diskety')), el('p', { class: 'note' }, 'Disketa nebyla načtena.')); return; }
+    const chk = el('input', { type: 'checkbox', id: 'show-deleted', checked: state.showDeleted, onchange: e => { state.showDeleted = e.target.checked; renderList(); } });
+    pane.append(el('div', { class: 'pane-head' }, el('h2', null, 'Obsah diskety'), d.fs ? el('label', { htmlFor: 'show-deleted' }, chk, 'Zobrazit smazané') : null));
+    const tbody = el('tbody');
+    const row = (cls, on, onpick, cells) => {
+      const tr = el('tr', { class: cls + (on ? ' on' : ''), tabIndex: 0, onclick: onpick, onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onpick(); } } }, ...cells);
+      tbody.append(tr);
+    };
+    row('', state.sel && state.sel.kind === 'disk', () => pick({ kind: 'disk' }),
+      [el('td', { class: 'name' }, el('span', { class: 'twist' }, ''), '[celý disk po sektorech]'), el('td', { class: 'num' }, fmtSize(d.data.length)), el('td', { class: 'date' }, '')]);
+    if (d.fs) (function walk(list) {
+      for (const e of list) {
+        if (e.deleted && !state.showDeleted) continue;
+        const pad = el('span', { style: 'display:inline-block;width:' + (e.depth * 1.4) + 'em' });
+        if (e.isDir) {
+          const closed = state.collapsed.has(e.path);
+          row('dir' + (e.deleted ? ' deleted' : ''), false, () => { closed ? state.collapsed.delete(e.path) : state.collapsed.add(e.path); renderList(); },
+            [el('td', { class: 'name' }, pad, el('span', { class: 'twist' }, closed ? '▸' : '▾'), e.name + '/'), el('td', { class: 'num' }, ''), el('td', { class: 'date' }, dosDate(e.date, e.time))]);
+          if (!closed) walk(e.children || []);
+        } else {
+          row(e.deleted ? 'deleted' : '', state.sel && state.sel.entry === e, () => pick({ kind: 'file', entry: e }),
+            [el('td', { class: 'name' }, pad, el('span', { class: 'twist' }, ''), e.name), el('td', { class: 'num' }, fmtSize(e.size)), el('td', { class: 'date' }, dosDate(e.date, e.time))]);
+        }
+      }
+    })(d.fs.root);
+    pane.append(el('div', { class: 'scroll' }, el('table', null,
+      el('thead', null, el('tr', null, el('th', null, 'Název'), el('th', { class: 'num' }, 'Bajtů'), el('th', null, 'Datum'))), tbody)));
+    if (!d.fs) pane.append(el('p', { class: 'note' }, 'Disketa nemá čitelný adresář. Bývá to u her s vlastním formátem nebo u poškozeného boot sektoru. Obsah lze projít po sektorech.'));
+  }
+
+  function renderView(note) {
+    const pane = $('view-pane'), d = disk(), s = state.sel, c = state.cache; pane.replaceChildren();
+    if (!d || !s || !c) { pane.append(el('p', { class: 'note' }, typeof note === 'string' ? note : d && d.have && d.live ? 'Vyberte soubor vlevo. Z diskety se přečte jen ta část, kterou soubor zabírá.' : 'Vyberte soubor vlevo.')); return; }
+    const isDisk = s.kind === 'disk', e = s.entry, bytes = c.bytes;
+    pane.append(el('div', { class: 'pane-head' }, el('span', { class: 'file-title' }, isDisk ? d.name + ' po sektorech' : e.path)));
+    if (!isDisk) {
+      const bits = [fmtSize(e.size) + ' bajtů'];
+      const dt = dosDate(e.date, e.time); if (dt) bits.push(dt);
+      const at = [e.attr & 1 ? 'jen pro čtení' : '', e.attr & 2 ? 'skrytý' : '', e.attr & 4 ? 'systémový' : ''].filter(Boolean); if (at.length) bits.push(at.join(', '));
+      const pi = prgInfo(bytes); if (pi) bits.push(pi);
+      if (c.img) bits.push(c.img.kind);
+      if (c.listing) bits.push('GFA BASIC 3.x, ' + c.listing.lines + ' řádků' + (c.listing.prot ? ', chráněný proti výpisu: jména proměnných v souboru nejsou' : ''));
+      else if (c.gfa) bits.push('GFA BASIC, formát verze ' + c.gfa.vers + ': výpis umím jen pro verze 3.5 a novější');
+      if (e.deleted) bits.push('smazaný soubor, obsah nemusí odpovídat');
+      else if (!c.complete) bits.push('řetězec clusterů je kratší než soubor, obsah je neúplný');
+      pane.append(el('p', { class: 'file-meta' }, bits.join(' · ')));
+    }
+    const bar = el('div', { class: 'toolbar' });
+    if (!isDisk) {
+      const seg = el('div', { class: 'seg', role: 'group', 'aria-label': 'Způsob zobrazení' });
+      const modes = [['text', 'Text'], ['hex', 'Hex']]; if (c.img) modes.unshift(['img', 'Obrázek']); if (c.listing) modes.unshift(['gfa', 'Výpis GFA']);
+      for (const [m, label] of modes) seg.append(el('button', { type: 'button', 'aria-pressed': String(state.mode === m), onclick: () => { state.mode = m; state.page = 0; renderView(); } }, label));
+      bar.append(seg);
+    }
+    const pageSize = isDisk ? 512 : 4096, pages = Math.max(1, Math.ceil(bytes.length / pageSize));
+    if (state.mode === 'text' || state.mode === 'gfa') {
+      const sel = el('select', { id: 'enc', 'aria-label': 'Kódování textu', onchange: ev => { state.enc = ev.target.value; renderView(); } });
+      for (const [v, t] of [['st', 'Atari ST'], ['kam', 'Kamenických'], ['cp1250', 'Windows-1250'], ['iso2', 'ISO 8859-2'], ['utf8', 'UTF-8']]) sel.append(el('option', { value: v, selected: state.enc === v }, t));
+      bar.append(el('label', { class: 'pager', htmlFor: 'enc' }, 'Kódování', sel));
+    }
+    if (state.mode === 'hex' && pages > 1) {
+      const go = p => { state.page = Math.min(pages - 1, Math.max(0, p)); renderView(); };
+      const inp = el('input', { type: 'number', id: 'page-no', min: 0, max: pages - 1, value: state.page, 'aria-label': isDisk ? 'Číslo sektoru' : 'Číslo stránky', onchange: ev => go(parseInt(ev.target.value, 10) || 0) });
+      bar.append(el('span', { class: 'pager' },
+        el('button', { type: 'button', onclick: () => go(state.page - 1), 'aria-label': 'Předchozí' }, '◀'),
+        isDisk ? 'sektor' : 'stránka', inp, 'z ' + (pages - 1),
+        el('button', { type: 'button', onclick: () => go(state.page + 1), 'aria-label': 'Další' }, '▶')));
+      if (isDisk && d.geo) {
+        const g = d.geo, n = state.page;
+        bar.append(el('span', { class: 'pager' }, 'stopa ' + Math.floor(n / (g.spt * g.sides)) + ', strana ' + (Math.floor(n / g.spt) % g.sides) + ', sektor ' + (n % g.spt + 1)));
+      }
+    }
+    bar.append(el('span', { class: 'spacer' }));
+    let canvas = null;
+    if (!isDisk) {
+      if (c.img && state.mode === 'img') bar.append(el('button', { type: 'button', onclick: () => {
+        const out = el('canvas', { width: 640, height: 400 }), ctx = out.getContext('2d'); ctx.imageSmoothingEnabled = false; ctx.drawImage(canvas, 0, 0, 640, 400);
+        out.toBlob(async blob => { if (blob) saveOut(e.name.replace(/\.[^.]*$/, '') + '.png', new Uint8Array(await blob.arrayBuffer())); }, 'image/png');
+      } }, 'Uložit jako PNG'));
+      if (c.listing && state.mode === 'gfa') bar.append(el('button', { type: 'button', onclick: () => saveOut(e.name.replace(/\.[^.]*$/, '').replace(/[^\w.\-]/g, '_') + '.LST', c.listing.bytes) }, 'Uložit výpis .LST'));
+      bar.append(el('button', { type: 'button', onclick: () => saveOut(e.name.replace(/[^\w.\-]/g, '_'), bytes) }, 'Stáhnout soubor'));
+    }
+    pane.append(bar);
+    const body = el('div', { class: 'viewbody' });
+    if (state.mode === 'img' && c.img) {
+      canvas = el('canvas', { width: c.img.w, height: c.img.h });
+      canvas.getContext('2d').putImageData(new ImageData(c.img.rgba, c.img.w, c.img.h), 0, 0);
+      body.append(el('div', { class: 'imgwrap' }, canvas));
+    } else if (state.mode === 'gfa' && c.listing) {
+      const L = c.listing, box = el('div', { class: 'listing' }), frag = document.createDocumentFragment(), heads = [];
+      const txt = (a, b) => decodeText(L.bytes.subarray(a, b), state.enc);
+      for (const r of L.rows) {
+        const row = el('span', { class: r.head ? 'cl head' : 'cl' }); let pos = 0;
+        for (let i = 0; i < r.marks.length; i += 3) {
+          const a = r.marks[i], b = r.marks[i + 1];
+          if (a > pos) row.append(txt(r.o + pos, r.o + a));
+          row.append(el('span', { class: 's-' + r.marks[i + 2] }, txt(r.o + a, r.o + b))); pos = b;
+        }
+        if (pos < r.n) row.append(txt(r.o + pos, r.o + r.n)); else if (!r.n) row.append(' ');
+        if (r.head) heads.push([txt(r.o, r.o + r.n).trim(), row]);
+        frag.append(row);
+      }
+      box.append(frag); body.append(box);
+      if (heads.length) {
+        const jump = el('select', { id: 'gfa-jump', 'aria-label': 'Přejít na proceduru', onchange: ev => { const h = heads[+ev.target.value]; if (h) body.scrollTop = h[1].offsetTop - box.offsetTop; } });
+        jump.append(el('option', { value: '' }, 'Přejít na … (' + heads.length + ')'));
+        heads.forEach((h, i) => jump.append(el('option', { value: String(i) }, h[0].length > 60 ? h[0].slice(0, 60) + '…' : h[0])));
+        bar.insertBefore(jump, bar.querySelector('.spacer'));
+      }
+    } else if (state.mode === 'text') {
+      const LIMIT = 262144;
+      body.append(el('pre', { class: 'text' }, decodeText(bytes.subarray(0, LIMIT), state.enc) + (bytes.length > LIMIT ? '\n\n[zobrazeno prvních 256 kB]' : '')));
+    } else if (isDisk && d.have && !d.have[Math.floor(state.page / d.geo.spt)]) {
+      const tr = Math.floor(state.page / d.geo.spt);
+      body.append(el('p', { class: 'note' }, 'Tato stopa ještě nebyla z diskety načtena. ',
+        d.live ? el('button', { type: 'button', onclick: async () => { await ensure(d, [tr]); if (disk() === d && state.sel === s) renderView(); } }, 'Načíst stopu') : null));
+    } else {
+      body.append(el('pre', null, bytes.length ? hexDump(bytes, state.page * pageSize, pageSize) : '(prázdný soubor)'));
+    }
+    pane.append(body);
+  }
+
+  $('btn-open').addEventListener('click', () => $('file-input').click());
+  $('file-input').addEventListener('change', e => { loadFiles(e.target.files); e.target.value = ''; });
+  let dragDepth = 0;
+  window.addEventListener('dragenter', e => { e.preventDefault(); dragDepth++; document.body.classList.add('drag'); });
+  window.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('drag'); } });
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; document.body.classList.remove('drag'); if (e.dataTransfer && e.dataTransfer.files) loadFiles(e.dataTransfer.files); });
+
+  addDisk('UKAZKA.MSA', buildDemoMSA(), true);
+  selectDisk(0);
+
+  $('btn-insert').addEventListener('click', insertDisk);
+  /* ---------- Settings (gw path, port, drive), stored by the helper ---------- */
+  const post = async (path, body) => {
+    try { const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); return await r.json(); }
+    catch (e) { return { ok: false, error: 'Pomocný program neodpovídá. Běží ještě st_disketa.py?' }; }
+  };
+  function showSettings(open) { $('settings').hidden = !open; $('btn-settings').setAttribute('aria-expanded', String(open)); }
+  function applyInfo(info) {
+    $('set-gw').value = info.gw_text || ''; $('set-device').value = info.device || ''; $('set-drive').value = info.drive || '';
+    $('set-ports').replaceChildren(...(info.ports || []).map(p => el('option', { value: p })));
+    $('set-ports-note').textContent = (info.ports && info.ports.length ? 'Porty v počítači: ' + info.ports.join(', ') + '. ' : 'Například COM5. ') + 'Prázdné pole: gw si port najde sám.';
+    $('set-state').textContent = info.gw ? 'Používá se: ' + info.gw_cmd : 'Program gw nebyl nalezen';
+    $('btn-insert').disabled = !info.gw; $('btn-test').disabled = !info.gw;
+  }
+  $('btn-settings').addEventListener('click', () => showSettings($('settings').hidden));
+  $('set-form').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const res = await post('/api/config', { gw: $('set-gw').value, device: $('set-device').value, drive: $('set-drive').value });
+    if (!res.ok) { sayErr(res.error || 'Nastavení se nepodařilo uložit.'); return; }
+    applyInfo(res);
+    say(!res.gw ? 'Uloženo, ale program gw se nenašel. Zadejte cestu ke gw.exe.' : res.saved ? 'Nastavení uloženo.' : 'Nastavení platí do ukončení programu, soubor s nastavením se nepodařilo zapsat.');
+  });
+  $('btn-test').addEventListener('click', async () => {
+    if (busy) { say('Počkejte, disketa se právě čte.'); return; }
+    busy = true; $('btn-test').disabled = true; say('Zkouším spojení s Greaseweazle …');
+    const res = await post('/api/test');
+    busy = false; $('btn-test').disabled = false;
+    $('test-out').hidden = false; $('test-out').textContent = res.log || res.error || '';
+    say(res.ok ? 'Greaseweazle odpovídá.' : 'Greaseweazle neodpověděl. Zkontrolujte port a připojení. Test používá uložené nastavení.', !res.ok);
+  });
+  if (location.protocol === 'http:') fetch('/api/info').then(r => r.json()).then(info => {
+    $('live-box').hidden = false; $('btn-open').classList.remove('primary');
+    applyInfo(info);
+    if (!info.gw) { showSettings(true); say('Program gw (Greaseweazle) nebyl nalezen. Zadejte cestu ke gw.exe v Nastavení a uložte.'); }
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>
